@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STL to GLB Converter | Premium 3D Tools</title>
+    <link rel="stylesheet" href="./style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="background-overlay"></div>
+
+    <main class="app-container">
+        <div class="language-picker custom-dropdown glass-compact" id="lang-dropdown">
+            <div class="selected-lang">
+                <img src="https://flagcdn.com/w40/fr.png" id="current-flag-img" alt="FR">
+                <span id="current-lang-label">FR</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="chevron">
+                    <path d="M6 9l6 6 6-6" />
+                </svg>
+            </div>
+            <div class="dropdown-options glass-compact hidden">
+                <div class="option" data-value="fr">
+                    <img src="https://flagcdn.com/w40/fr.png" alt="FR">
+                    <span>Français</span>
+                </div>
+                <div class="option" data-value="en">
+                    <img src="https://flagcdn.com/w40/us.png" alt="EN">
+                    <span>English</span>
+                </div>
+                <div class="option" data-value="es">
+                    <img src="https://flagcdn.com/w40/es.png" alt="ES">
+                    <span>Español</span>
+                </div>
+                <div class="option" data-value="de">
+                    <img src="https://flagcdn.com/w40/de.png" alt="DE">
+                    <span>Deutsch</span>
+                </div>
+                <div class="option" data-value="it">
+                    <img src="https://flagcdn.com/w40/it.png" alt="IT">
+                    <span>Italiano</span>
+                </div>
+            </div>
+        </div>
+
+        <header class="hero">
+            <h1 data-i18n="headerTitle">3D Tools & <span class="accent">Optimizer</span></h1>
+            <p class="subtitle" data-i18n="subtitle">Convertissez, compressez et optimisez vos modèles 3D en un clin
+                d'œil.</p>
+        </header>
+
+        <section id="mode-selection" class="mode-selection">
+            <div class="mode-card glass" data-mode="STL_TO_GLB">
+                <div class="mode-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                    </svg>
+                </div>
+                <h3 data-i18n="modeStl">Convertir STL</h3>
+                <p data-i18n="modeStlDesc">Transformez vos fichiers STL en GLB optimisés avec Draco.</p>
+                <button class="primary-btn-sm" data-i18n="btnChoose">Choisir</button>
+            </div>
+            <div class="mode-card glass" data-mode="COMPRESS_GLB">
+                <div class="mode-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path
+                            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                        <line x1="12" y1="22.08" x2="12" y2="12" />
+                    </svg>
+                </div>
+                <h3 data-i18n="modeGlb">Compresser GLB</h3>
+                <p data-i18n="modeGlbDesc">Réduisez drastiquement la taille de vos fichiers GLB existants.</p>
+                <button class="primary-btn-sm" data-i18n="btnChoose">Choisir</button>
+            </div>
+        </section>
+
+        <section id="converter-section" class="converter-box glass hidden">
+            <button id="back-to-modes" class="back-btn glass-compact">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M19 12H5m7 7l-7-7 7-7" />
+                </svg>
+                <span data-i18n="btnBack">Retour</span>
+            </button>
+            <div id="drop-zone" class="drop-zone">
+                <div class="drop-content">
+                    <div class="icon-container">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+                        </svg>
+                    </div>
+                    <span id="drop-text" data-i18n="dropTextStl">Déposez votre fichier .STL ici</span>
+                    <p data-i18n="dropBrowse">ou cliquez pour choisir un fichier</p>
+                    <input type="file" id="file-input" hidden>
+                </div>
+            </div>
+
+            <div id="preview-container" class="preview-container hidden">
+                <div id="canvas-holder"></div>
+                <div id="comparison-slider" class="comparison-slider hidden">
+                    <div class="slider-line"></div>
+                    <div class="slider-handle">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <path d="M18 8L22 12L18 16M6 8L2 12L6 16" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="preview-labels hidden">
+                    <span class="label-orig" data-i18n="originalLabel">Original</span>
+                    <span class="label-opt" data-i18n="optimizedLabel">Optimisé</span>
+                </div>
+                <div class="stats glass-compact">
+                    <div class="stat-item">
+                        <span class="label" data-i18n="labelVertices">Sommets:</span>
+                        <span id="vert-count" class="value">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="label" data-i18n="labelFaces">Faces:</span>
+                        <span id="face-count" class="value">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="controls" class="controls hidden">
+                <div class="options glass-compact">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="compress-check" checked>
+                        <span class="checkmark"></span>
+                        <span data-i18n="settingsDraco">Compression Draco</span>
+                    </label>
+                    <div class="slider-group" id="compression-level-group">
+                        <div class="slider-header">
+                            <span class="label">Qualité (Quantisation)</span>
+                            <span id="compression-value" class="value">14 bits</span>
+                        </div>
+                        <input type="range" id="compression-range" min="6" max="16" value="14" step="1">
+                        <div class="slider-hints">
+                            <span data-i18n="sliderLight">Léger</span>
+                            <span data-i18n="sliderPrecise">Précis</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="action-buttons" class="action-buttons">
+                    <button id="convert-btn" class="primary-btn">
+                        <span data-i18n="btnConvert">Lancer la Conversion</span>
+                    </button>
+                    <button id="download-btn" class="download-btn hidden">
+                        <span data-i18n="btnDownload">Télécharger .GLB</span>
+                    </button>
+                    <button id="reset-btn" class="secondary-btn">
+                        <span data-i18n="btnNew">Nouveau Fichier</span>
+                    </button>
+                </div>
+
+                <div id="results-panel" class="results-panel glass-compact hidden">
+                    <div class="results-grid">
+                        <!-- Size Row -->
+                        <div class="result-row">
+                            <span class="row-label" data-i18n="labelFinalSize">Taille :</span>
+                            <div class="row-values">
+                                <span id="original-size" class="old-value">-</span>
+                                <span class="sep">→</span>
+                                <span id="final-size" class="new-value">-</span>
+                                <span class="badge" id="reduction-badge">-0%</span>
+                            </div>
+                        </div>
+                        <!-- Vertices Row -->
+                        <div class="result-row">
+                            <span class="row-label" data-i18n="labelVertices">Sommets :</span>
+                            <div class="row-values">
+                                <span id="orig-vert-count-res" class="old-value">-</span>
+                                <span class="sep">→</span>
+                                <span id="opt-vert-count-res" class="new-value">-</span>
+                            </div>
+                        </div>
+                        <!-- Faces Row -->
+                        <div class="result-row">
+                            <span class="row-label" data-i18n="labelFaces">Faces :</span>
+                            <div class="row-values">
+                                <span id="orig-face-count-res" class="old-value">-</span>
+                                <span class="sep">→</span>
+                                <span id="opt-face-count-res" class="new-value">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="info">
+            <p data-i18n="footer">Traitement 100% local. Vos fichiers ne quittent jamais votre ordinateur.</p>
+        </footer>
+    </main>
+
+    <div id="loader" class="loader-overlay hidden">
+        <div class="spinner"></div>
+        <p>Conversion en cours...</p>
+    </div>
+
+    <script type="module" src="./app.js"></script>
+</body>
+
+</html>
