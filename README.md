@@ -12,7 +12,6 @@ A fast, simple and private web tool to convert and optimize your 3D models.
 - **Draco Compression**: Drastically reduce file sizes using advanced quantization.
 - **Real-time 3D Comparison**: Split-screen preview to compare original vs optimized models.
 - **Apple AR Support**: Export to USDZ for seamless integration with iOS AR.
-- **Glassmorphic UI**: High-end design with a smooth user experience.
 - **100% Privacy**: All processing happens in your browser. No files are ever uploaded.
 
 ## 🚀 Getting Started
