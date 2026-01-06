@@ -46,7 +46,12 @@ export const UIManager = {
         en: 'https://flagcdn.com/w40/us.png',
         es: 'https://flagcdn.com/w40/es.png',
         de: 'https://flagcdn.com/w40/de.png',
-        it: 'https://flagcdn.com/w40/it.png'
+        it: 'https://flagcdn.com/w40/it.png',
+        pt: 'https://flagcdn.com/w40/pt.png',
+        nl: 'https://flagcdn.com/w40/nl.png',
+        ru: 'https://flagcdn.com/w40/ru.png',
+        zh: 'https://flagcdn.com/w40/cn.png',
+        ja: 'https://flagcdn.com/w40/jp.png'
     },
 
     initI18n(onLanguageChange) {

@@ -1,53 +1,25 @@
-# 3D Tools & Optimizer 🚀
+# 3D Tools & Optimizer
 
-A premium web-based tool for converting STL files to GLB and optimizing existing GLB/glTF models using Draco compression. Built with a focus on performance, aesthetics, and privacy (all processing happens locally in the browser).
+A fast, simple and private web tool to convert and optimize your 3D models.
+
+**[Try it now: web-converter-3d.pages.dev](https://web-converter-3d.pages.dev/)**
+
+### 🛡️ 100% local processing. Your files never leave your computer.
 
 ## ✨ Features
 
-- **STL to GLB Conversion**: Transform STL files into optimized GLB models with Draco support.
-- **OBJ to GLB Conversion**: **NEW** Convert OBJ files into optimized GLB models.
-- **GLB to STL Conversion**: Convert GLB files back to standard STL format.
-- **GLB to OBJ Conversion**: **NEW** Convert GLB files back to standard OBJ format.
-- **GLB Compression**: Drastically reduce file sizes using Draco quantization.
-- **Real-time 3D Comparison**: A split-screen preview allows you to compare the original (Turquoise) and optimized (Green) models side-by-side.
-- **Internationalization (i18n)**: Fully localized in 5 languages:
-  - 🇫🇷 Français
-  - 🇺🇸 English
-  - 🇪🇸 Español
-  - 🇩🇪 Deutsch
-  - 🇮🇹 Italiano
-- **Custom Premium UI**: A glassmorphic design featuring a specialized language picker with SVG flags for consistent rendering across all platforms.
-- **100% Privacy**: No files are uploaded to any server. All processing is done locally via WebWorkers and Three.js.
-
-## 🛠 Tech Stack
-
-- **Core**: [Three.js](https://threejs.org/) (Rendering, STL/GLB Loaders & Exporters)
-- **Optimization**: [@gltf-transform](https://gltf-transform.dev/) for Draco compression and scene optimization.
-- **Styling**: Vanilla CSS with modern Glassmorphism techniques and Google Fonts (Outfit).
-- **i18n**: Custom lightweight translation system with dynamic UI updates.
-
-## 🏗 Architecture
-
-The project follows a clean, modular structure:
-
-- `index.html`: Main application structure and SEO-optimized meta tags.
-- `app.js`: Application logic, state management, and UI event handling.
-- `ModelReader.js`: **NEW** Dedicated service for handling 3D model loading, normalization, materials, and geometry statistics.
-- `translations.js`: Centralized dictionary for all supported languages.
-- `style.css`: Comprehensive design system with responsive layout and animations.
+- **Multi-format Conversion**: Transform files between STL, OBJ, GLB, PLY, FBX, and 3MF.
+- **Draco Compression**: Drastically reduce file sizes using advanced quantization.
+- **Real-time 3D Comparison**: Split-screen preview to compare original vs optimized models.
+- **Apple AR Support**: Export to USDZ for seamless integration with iOS AR.
+- **Glassmorphic UI**: High-end design with a smooth user experience.
+- **100% Privacy**: All processing happens in your browser. No files are ever uploaded.
 
 ## 🚀 Getting Started
 
-### Prerequisites
-
-- [Node.js](https://nodejs.org/) installed on your machine.
-
 ### Installation
 
-1. Navigate to the project directory:
-   ```bash
-   cd web_converter
-   ```
+1. Clone the repository and navigate to the directory.
 2. Install dependencies:
    ```bash
    npm install
@@ -57,14 +29,20 @@ The project follows a clean, modular structure:
    npm run dev
    ```
 
-### Usage
+## 🍺 Supporting the Project
 
-1. Select your mode: **STL to GLB**, **OBJ to GLB**, **GLB to STL**, **GLB to OBJ**, or **Compress GLB**.
-2. Drag and drop your file or click to browse.
-3. Adjust compression settings (Draco 1-20 bits).
-4. Click **Convert** or **Update Optimization** to see the results.
-5. Use the split-screen slider to inspect the visual fidelity.
-6. Click **Download .GLB** to save your optimized model.
+If this tool helps you in your workflow, feel free to support its development:
+
+[**Buy us a beer** 🍺](https://buymeacoffee.com/lobuss)
+
+## 🙏 Special Thanks
+
+This project is made possible thanks to these amazing open-source libraries:
+
+- [Three.js](https://threejs.org/) - The 3D engine.
+- [gltf-transform](https://gltf-transform.dev/) - Scene optimization and processing.
+- [Draco](https://github.com/google/draco) - 3D geometric mesh and point cloud compression.
+- [fflate](https://github.com/101arrowz/fflate) - High-performance compression/decompression.
 
 ---
 *Built with ❤️ for the 3D Community.*
