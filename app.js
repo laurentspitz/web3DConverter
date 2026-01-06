@@ -130,6 +130,7 @@ async function handleFile(file) {
             else result = await ModelReader.loadGLB(buffer, 'original');
 
             State.originalStats = result.stats;
+            State.normalization = result.normalization;
             ThreeManager.setModel(result.model, result.normalization);
 
             // Update initial stats display
@@ -175,59 +176,64 @@ async function runConversion() {
             const format = State.targetFormat;
             UIManager.showLoader(t.loaderOptimizing);
 
-            // 1. Clone and Bake all transforms
+            // 1. Clone and Restore original scale
             const exportObj = ThreeManager.originalModel.clone();
+            // Ensure no leftover preview transforms from parents
+            exportObj.scale.set(1, 1, 1);
+            exportObj.position.set(0, 0, 0);
+            exportObj.rotation.set(0, 0, 0);
             exportObj.updateMatrixWorld(true);
 
+            // 2. Compute center of the original model (at scale 1.0)
             const box = new THREE.Box3().setFromObject(exportObj);
             const center = box.getCenter(new THREE.Vector3());
 
-            exportObj.traverse(child => {
-                if (child.isMesh) {
-                    child.geometry = child.geometry.clone();
-                    child.geometry.applyMatrix4(child.matrixWorld);
-                    child.position.set(0, 0, 0);
-                    child.rotation.set(0, 0, 0);
-                    child.scale.set(1, 1, 1);
-                    child.updateMatrix();
-                }
-            });
+            // 3. Setup Export Wrapper for Orientation/Centering
+            // This is safer than baking geometry as it preserves model integrity
+            const wrapper = new THREE.Object3D();
+            wrapper.add(exportObj);
 
-            exportObj.traverse(child => {
-                if (child.isMesh) {
-                    child.geometry.translate(-center.x, -center.y, -center.z);
-                    if (format === 'stl') child.geometry.rotateX(Math.PI / 2); // Z-up for STL
-                }
-            });
+            // Move model within wrapper so it's centered at origin
+            exportObj.position.copy(center).multiplyScalar(-1);
+
+            // Standards: GLB/OBJ are Y-up. STL is usually Z-up.
+            if (format === 'stl' && State.inputFormat !== 'stl') {
+                wrapper.rotation.x = Math.PI / 2;
+            }
+            wrapper.updateMatrixWorld(true);
 
             State.processedBuffer = null;
             let previewResult;
 
             if (format === 'stl') {
                 const exporter = new STLExporter();
-                const stlData = exporter.parse(exportObj, { binary: true });
-                State.processedBuffer = stlData.buffer;
+                const stlData = exporter.parse(wrapper, { binary: true });
+                // DataView safety: get the exact buffer slice
+                State.processedBuffer = stlData.buffer.slice(stlData.byteOffset, stlData.byteOffset + stlData.byteLength);
+
                 UIManager.showLoader(t.loaderLoading);
                 previewResult = await ModelReader.loadSTL(State.processedBuffer, true);
+
+                // Position for preview (normalized space)
                 previewResult.model.position.copy(center);
                 previewResult.model.rotation.x = -Math.PI / 2;
             } else if (format === 'obj') {
                 const exporter = new OBJExporter();
-                const objData = exporter.parse(exportObj);
+                const objData = exporter.parse(wrapper);
                 State.processedBuffer = new TextEncoder().encode(objData).buffer;
                 UIManager.showLoader(t.loaderLoading);
                 previewResult = await ModelReader.loadOBJ(State.processedBuffer, true);
                 previewResult.model.position.copy(center);
             } else if (format === 'ply') {
                 const exporter = new PLYExporter();
-                const plyData = exporter.parse(exportObj, () => { }, { binary: true });
-                State.processedBuffer = plyData; // PLYExporter binary returns ArrayBuffer
+                const plyData = exporter.parse(wrapper, () => { }, { binary: true });
+                State.processedBuffer = plyData;
                 UIManager.showLoader(t.loaderLoading);
                 previewResult = await ModelReader.loadPLY(State.processedBuffer, true);
                 previewResult.model.position.copy(center);
             } else if (format === 'usdz') {
                 const exporter = new USDZExporter();
-                const usdzData = await exporter.parse(exportObj); // USDZ.parse is async
+                const usdzData = await exporter.parse(wrapper);
                 State.processedBuffer = usdzData;
                 // Special case: we can't easily "preview" USDZ back in Three.js without a specific loader 
                 // (which doesn't exist officially in Three.js examples).
