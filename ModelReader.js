@@ -6,6 +6,7 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { ThreeMFLoader } from 'three/examples/jsm/loaders/3MFLoader';
+import * as fflate from 'fflate';
 
 const DRACO_DECODER_PATH = 'https://www.gstatic.com/draco/v1/decoders/';
 
@@ -79,6 +80,9 @@ export class ModelReader {
     static async loadFBX(buffer, isResult = false) {
         if (!buffer) throw new Error("Buffer is undefined");
         const loader = new FBXLoader();
+        // @ts-ignore
+        loader.setResourcePath('');
+        // FBXLoader in some versions might need fflate if the file is compressed
         const blob = new Blob([buffer]);
         const url = URL.createObjectURL(blob);
         try {
@@ -96,6 +100,8 @@ export class ModelReader {
     static async load3MF(buffer, isResult = false) {
         if (!buffer) throw new Error("Buffer is undefined");
         const loader = new ThreeMFLoader();
+        // @ts-ignore
+        loader.fflate = fflate;
         const blob = new Blob([buffer]);
         const url = URL.createObjectURL(blob);
         try {

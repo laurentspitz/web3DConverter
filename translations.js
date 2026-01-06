@@ -35,7 +35,11 @@ const translations = {
         errLoadObj: "Erreur lors du chargement OBJ: ",
         originalLabel: "ORIGINAL",
         resultLabel: "RÉSULTAT",
-        dropBrowse: "ou cliquez pour choisir un fichier"
+        dropBrowse: "ou cliquez pour choisir un fichier",
+        supportTitle: "Soutenir le projet",
+        supportText: "Si cet outil vous est utile, vous pouvez m'offrir une bière pour soutenir son développement.",
+        supportBtn: "M'offrir une bière",
+        adNotice: "Publicité"
     },
     en: {
         title: "STL to GLB Converter | Premium 3D Tools",
@@ -73,7 +77,11 @@ const translations = {
         errLoadObj: "Error loading OBJ: ",
         originalLabel: "ORIGINAL",
         resultLabel: "RESULT",
-        dropBrowse: "or click to choose a file"
+        dropBrowse: "or click to choose a file",
+        supportTitle: "Support the Project",
+        supportText: "If this tool helps you, feel free to buy me a beer to support its development.",
+        supportBtn: "Buy me a beer",
+        adNotice: "Advertisement"
     },
     es: {
         title: "Convertidor STL a GLB | Herramientas 3D Premium",
@@ -110,7 +118,11 @@ const translations = {
         errLoadObj: "Error al cargar OBJ: ",
         originalLabel: "ORIGINAL",
         resultLabel: "RESULTADO",
-        dropBrowse: "o haz clic para elegir un archivo"
+        dropBrowse: "o haz clic para elegir un archivo",
+        supportTitle: "Apoya el Proyecto",
+        supportText: "Si esta herramienta te ayuda, puedes invitarme a una cerveza para apoyar su desarrollo.",
+        supportBtn: "Invítame a una cerveza",
+        adNotice: "Publicidad"
     },
     de: {
         title: "STL zu GLB Konverter | Premium 3D Tools",
@@ -147,7 +159,11 @@ const translations = {
         errLoadObj: "Fehler beim Laden von OBJ: ",
         originalLabel: "ORIGINAL",
         resultLabel: "ERGEBNIS",
-        dropBrowse: "oder klicken Sie, um eine Datei auszuwählen"
+        dropBrowse: "oder klicken Sie, um eine Datei auszuwählen",
+        supportTitle: "Projekt unterstützen",
+        supportText: "Wenn dieses Tool Ihnen hilft, können Sie mir ein Bier ausgeben, um die Entwicklung zu unterstützen.",
+        supportBtn: "Ein Bier spendieren",
+        adNotice: "Anzeige"
     },
     it: {
         title: "Convertitore da STL a GLB | Strumenti 3D Premium",
@@ -172,7 +188,7 @@ const translations = {
         labelTargetFormat: "Converti in:",
         labelVertices: "Vertici:",
         labelFaces: "Facce:",
-        footer: "Elaborazione 100% locale. I tuoi file non lasciano mai il tuo computer.",
+        footer: "Elaborazione 100% local. I tuoi file non lasciano mai il tsuo computer.",
         loaderDefault: "Conversione in corso...",
         loaderReading: "Lettura del file...",
         loaderGenerating: "Generazione vista 3D...",
@@ -184,7 +200,11 @@ const translations = {
         errLoadObj: "Errore durante il caricamento OBJ: ",
         originalLabel: "ORIGINALE",
         resultLabel: "RISULTATO",
-        dropBrowse: "o clicca per scegliere un file"
+        dropBrowse: "o clicca per scegliere un file",
+        supportTitle: "Sostieni il Progetto",
+        supportText: "Se questo strumento ti è utile, offrimi una birra per sostenere il suo sviluppo.",
+        supportBtn: "Offrimi una birra",
+        adNotice: "Pubblicità"
     }
 };
 

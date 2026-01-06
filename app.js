@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter';
 import { STLExporter } from 'three/examples/jsm/exporters/STLExporter';
 import { OBJExporter } from 'three/examples/jsm/exporters/OBJExporter';
+import { PLYExporter } from 'three/examples/jsm/exporters/PLYExporter';
 import { USDZExporter } from 'three/examples/jsm/exporters/USDZExporter';
 import translations from './translations.js';
 import { ModelReader } from './ModelReader.js';
@@ -38,7 +39,7 @@ function setupEventListeners() {
     const { elements } = UIManager;
 
     // Generic file input accept
-    elements.fileInput.accept = ".stl,.obj,.glb,.ply";
+    elements.fileInput.accept = ".stl,.obj,.glb,.ply,.fbx,.3mf";
 
     // File handling
     elements.dropZone.addEventListener('click', () => elements.fileInput.click());
@@ -58,13 +59,6 @@ function setupEventListeners() {
 
     // Conversion and settings
     elements.convertBtn.addEventListener('click', runConversion);
-    elements.compressCheck.addEventListener('change', () => {
-        elements.compressionGroup.style.opacity = elements.compressCheck.checked ? '1' : '0.3';
-        elements.compressionGroup.style.pointerEvents = elements.compressCheck.checked ? 'auto' : 'none';
-    });
-    elements.compressionRange.addEventListener('input', () => {
-        elements.compressionValue.textContent = `${elements.compressionRange.value} bits`;
-    });
 
     // Navigation
     elements.resetBtn.addEventListener('click', resetApp);
@@ -262,7 +256,7 @@ async function runConversion() {
             State.processedBuffer = glbBuffer;
 
             if (elements.compressCheck.checked) {
-                const bits = parseInt(elements.compressionRange.value);
+                const bits = 11; // Optimization: Fixed 11-bit quantization for best compatibility/size
                 UIManager.showLoader(`${t.settingsDraco} (${bits} bits)...`);
                 State.processedBuffer = await OptimizationManager.applyDracoCompression(glbBuffer, bits);
             }

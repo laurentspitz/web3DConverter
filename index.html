@@ -91,6 +91,13 @@
             <h1 data-i18n="headerTitle">3D Tools & <span class="accent">Optimizer</span></h1>
             <p class="subtitle" data-i18n="subtitle">Convertissez, compressez et optimisez vos modèles 3D en un clin
                 d'œil.</p>
+            <div class="privacy-banner glass-compact">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    <path d="m9 12 2 2 4-4" />
+                </svg>
+                <span data-i18n="footer">Traitement 100% local. Vos fichiers ne quittent jamais votre ordinateur.</span>
+            </div>
         </header>
 
 
@@ -104,7 +111,8 @@
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
                         </svg>
                     </div>
-                    <span id="drop-text" data-i18n="dropZone">Déposez votre fichier (STL, OBJ, GLB, PLY) ici</span>
+                    <span id="drop-text" data-i18n="dropZone">Déposez votre fichier (STL, OBJ, GLB, PLY, FBX, 3MF)
+                        ici</span>
                     <p data-i18n="dropBrowse">ou cliquez pour choisir un fichier</p>
                     <input type="file" id="file-input" hidden>
                 </div>
@@ -149,17 +157,6 @@
                         <span class="checkmark"></span>
                         <span data-i18n="settingsDraco">Compression Draco</span>
                     </label>
-                    <div class="slider-group" id="compression-level-group">
-                        <div class="slider-header">
-                            <span class="label">Qualité (Quantisation)</span>
-                            <span id="compression-value" class="value">14 bits</span>
-                        </div>
-                        <input type="range" id="compression-range" min="6" max="16" value="14" step="1">
-                        <div class="slider-hints">
-                            <span data-i18n="sliderLight">Léger</span>
-                            <span data-i18n="sliderPrecise">Précis</span>
-                        </div>
-                    </div>
                 </div>
                 <div id="action-buttons" class="action-buttons">
                     <button id="convert-btn" class="primary-btn">
@@ -206,10 +203,44 @@
                     </div>
                 </div>
             </div>
+
         </section>
 
-        <footer class="info">
-            <p data-i18n="footer">Traitement 100% local. Vos fichiers ne quittent jamais votre ordinateur.</p>
+        <!-- Donation Section -->
+        <section class="support-section glass">
+            <div class="support-content">
+                <div class="support-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 11h1a3 3 0 0 1 0 6h-1" />
+                        <path d="M9 12v6" />
+                        <path d="M13 12v6" />
+                        <path
+                            d="M14 7.5c-1 0-1.44.5-3 .5s-2-.5-3-.5-1.72.5-2.5.5a2.5 2.5 0 0 1 0-5c.78 0 1.72.5 2.5.5s1.44-.5 3-.5 2 .5 3 .5 1.72-.5 2.5-.5a2.5 2.5 0 0 1 0 5c-.78 0-1.5-.5-2.5-.5Z" />
+                        <path d="M5 8v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8" />
+                    </svg>
+                </div>
+                <div class="support-text">
+                    <h3 data-i18n="supportTitle">Soutenir le projet</h3>
+                    <p data-i18n="supportText">Si cet outil vous est utile, vous pouvez m'offrir un café pour soutenir
+                        son développement.</p>
+                </div>
+                <a href="https://buymeacoffee.com/lobuss" class="support-btn" id="coffee-link" target="_blank">
+                    <span data-i18n="supportBtn">M'offrir un café</span>
+                </a>
+            </div>
+
+            <div class="support-divider hidden"></div>
+
+            <!-- Ad Placement -->
+            <div id="ad-container" class="ad-container-integrated hidden">
+                <span class="ad-badge" data-i18n="adNotice">Publicité</span>
+                <div class="ad-placeholder">
+                    <p>Votre publicité ici</p>
+                    <p class="ad-sub">Carbon Ads / EthicalAds</p>
+                </div>
+            </div>
+        </section>
+
         </footer>
     </main>
 
