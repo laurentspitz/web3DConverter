@@ -1,0 +1,7 @@
+/*
+  Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
+
+# Specific caching for 3D assets and scripts to speed up subsequent loads
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
