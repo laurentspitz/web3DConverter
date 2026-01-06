@@ -4,8 +4,11 @@ A premium web-based tool for converting STL files to GLB and optimizing existing
 
 ## ✨ Features
 
-- **STL to GLB Conversion**: Seamlessly transform STL files into modern, efficient GLB models.
-- **GLB Compression**: Drastically reduce file sizes of existing GLB models with adjustable Draco quantization.
+- **STL to GLB Conversion**: Transform STL files into optimized GLB models with Draco support.
+- **OBJ to GLB Conversion**: **NEW** Convert OBJ files into optimized GLB models.
+- **GLB to STL Conversion**: Convert GLB files back to standard STL format.
+- **GLB to OBJ Conversion**: **NEW** Convert GLB files back to standard OBJ format.
+- **GLB Compression**: Drastically reduce file sizes using Draco quantization.
 - **Real-time 3D Comparison**: A split-screen preview allows you to compare the original (Turquoise) and optimized (Green) models side-by-side.
 - **Internationalization (i18n)**: Fully localized in 5 languages:
   - 🇫🇷 Français
@@ -56,7 +59,7 @@ The project follows a clean, modular structure:
 
 ### Usage
 
-1. Select your mode: **STL to GLB** or **Compress GLB**.
+1. Select your mode: **STL to GLB**, **OBJ to GLB**, **GLB to STL**, **GLB to OBJ**, or **Compress GLB**.
 2. Drag and drop your file or click to browse.
 3. Adjust compression settings (Draco 1-20 bits).
 4. Click **Convert** or **Update Optimization** to see the results.

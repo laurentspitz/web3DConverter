@@ -3,7 +3,6 @@ import translations from './translations.js';
 export const UIManager = {
     // DOM Elements
     elements: {
-        modeSelection: document.getElementById('mode-selection'),
         converterSection: document.getElementById('converter-section'),
         dropZone: document.getElementById('drop-zone'),
         dropText: document.getElementById('drop-text'),
@@ -12,7 +11,7 @@ export const UIManager = {
         convertBtn: document.getElementById('convert-btn'),
         downloadBtn: document.getElementById('download-btn'),
         resetBtn: document.getElementById('reset-btn'),
-        backToModesBtn: document.getElementById('back-to-modes'),
+
         resultsPanel: document.getElementById('results-panel'),
         originalSizeText: document.getElementById('original-size'),
         finalSizeText: document.getElementById('final-size'),
@@ -25,18 +24,23 @@ export const UIManager = {
         compressionRange: document.getElementById('compression-range'),
         compressionValue: document.getElementById('compression-value'),
         compressionGroup: document.getElementById('compression-level-group'),
+        compressionOptions: document.getElementById('compression-options'),
         controls: document.getElementById('controls'),
         origVertCountRes: document.getElementById('orig-vert-count-res'),
         optVertCountRes: document.getElementById('opt-vert-count-res'),
         origFaceCountRes: document.getElementById('orig-face-count-res'),
-        optFaceCountRes: document.getElementById('opt-face-count-res'),
+        resFaceCountRes: document.getElementById('opt-face-count-res'),
         comparisonSlider: document.getElementById('comparison-slider'),
         sliderHandle: document.getElementById('comparison-slider').querySelector('.slider-handle'),
         previewLabels: document.querySelector('.preview-labels'),
         canvasHolder: document.getElementById('canvas-holder'),
         langDropdown: document.getElementById('lang-dropdown'),
         currentLangLabel: document.getElementById('current-lang-label'),
-        currentFlagImg: document.getElementById('current-flag-img')
+        currentFlagImg: document.getElementById('current-flag-img'),
+        formatSelection: document.getElementById('format-selection'),
+        targetFormatGroup: document.getElementById('target-format-group'),
+        labelOrigText: document.getElementById('label-orig-text'),
+        labelOptText: document.getElementById('label-opt-text')
     },
 
     currentLanguage: 'fr',
@@ -128,16 +132,57 @@ export const UIManager = {
         this.elements.loaderOverlay.classList.add('hidden');
     },
 
-    setModeUI(mode) {
-        this.elements.modeSelection.classList.add('hidden');
-        this.elements.converterSection.classList.remove('hidden');
+    setAvailableFormats(formats, currentTarget, onFormatChange) {
+        this.elements.formatSelection.innerHTML = '';
+        formats.forEach(fmt => {
+            const btn = document.createElement('button');
+            btn.className = `format-btn ${fmt === currentTarget ? 'active' : ''}`;
+            btn.dataset.format = fmt;
+            btn.textContent = fmt.toUpperCase();
+            btn.addEventListener('click', () => {
+                this.elements.formatSelection.querySelectorAll('.format-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                if (onFormatChange) onFormatChange(fmt);
+            });
+            this.elements.formatSelection.appendChild(btn);
+        });
 
-        if (mode === 'STL_TO_GLB') {
-            this.elements.dropText.dataset.i18n = "dropTextStl";
-            this.elements.fileInput.accept = ".stl";
+        // Show/Hide target format group based on number of options
+        if (formats.length > 0) {
+            this.elements.targetFormatGroup.classList.remove('hidden');
         } else {
-            this.elements.dropText.dataset.i18n = "dropTextGlb";
-            this.elements.fileInput.accept = ".glb";
+            this.elements.targetFormatGroup.classList.add('hidden');
+        }
+    },
+
+    updateOptionsVisibility(inputExt, targetFormat, fileName = "model") {
+        const t = translations[this.currentLanguage];
+
+        // Update labels with format info and file names
+        if (this.elements.labelOrigText) {
+            const origLabelBase = t.originalLabel || 'Original';
+            this.elements.labelOrigText.textContent = `${origLabelBase} ${inputExt.toUpperCase()} : ${fileName}`;
+        }
+        if (this.elements.labelOptText) {
+            const resultLabelBase = t.resultLabel || 'Optimisé';
+            this.elements.labelOptText.textContent = `${resultLabelBase} ${targetFormat.toUpperCase()} : ${fileName}`;
+        }
+
+        // Draco only for GLB output
+        if (targetFormat === 'glb') {
+            this.elements.compressionOptions.style.display = 'block';
+        } else {
+            this.elements.compressionOptions.style.display = 'none';
+        }
+
+        // Update download button text
+        const dlSpan = this.elements.downloadBtn.querySelector('span');
+        if (dlSpan) {
+            if (targetFormat === 'stl') dlSpan.dataset.i18n = "btnDownloadStl";
+            else if (targetFormat === 'obj') dlSpan.dataset.i18n = "btnDownloadObj";
+            else if (targetFormat === 'ply') dlSpan.dataset.i18n = "btnDownloadPly";
+            else if (targetFormat === 'usdz') dlSpan.dataset.i18n = "btnDownloadUsdz";
+            else dlSpan.dataset.i18n = "btnDownload";
         }
         this.updateUI();
     },
@@ -149,30 +194,41 @@ export const UIManager = {
         this.elements.resultsPanel.classList.add('hidden');
         this.elements.downloadBtn.classList.add('hidden');
         this.elements.comparisonSlider.classList.add('hidden');
-        this.elements.previewLabels.classList.add('hidden');
+        this.elements.previewLabels.classList.remove('hidden');
+        if (this.elements.labelOptText) this.elements.labelOptText.classList.add('hidden');
         this.elements.convertBtn.classList.remove('hidden');
     },
 
-    showResults(originalSize, finalSize, reduction, origStats, optStats) {
+    showResults(originalSize, finalSize, reduction, origStats, resStats) {
         this.elements.originalSizeText.textContent = originalSize;
         this.elements.finalSizeText.textContent = finalSize;
-        this.elements.reductionBadge.textContent = `-${reduction}%`;
+        const sign = reduction >= 0 ? '-' : '+';
+        const absReduction = Math.abs(reduction);
+        this.elements.reductionBadge.textContent = `${sign}${absReduction}%`;
+
+        // Optional: change badge color if size increased
+        if (reduction < 0) {
+            this.elements.reductionBadge.style.background = 'rgba(255, 71, 87, 0.2)'; // Soft red
+            this.elements.reductionBadge.style.color = '#ff4757';
+        } else {
+            this.elements.reductionBadge.style.background = ''; // Reset to CSS default
+            this.elements.reductionBadge.style.color = '';
+        }
 
         this.elements.origVertCountRes.textContent = origStats.vertices;
         this.elements.origFaceCountRes.textContent = origStats.faces;
-        this.elements.optVertCountRes.textContent = optStats.vertices;
-        this.elements.optFaceCountRes.textContent = optStats.faces;
+        this.elements.optVertCountRes.textContent = resStats.vertices;
+        this.elements.resFaceCountRes.textContent = resStats.faces;
 
         this.elements.resultsPanel.classList.remove('hidden');
         this.elements.downloadBtn.classList.remove('hidden');
         this.elements.comparisonSlider.classList.remove('hidden');
         this.elements.previewLabels.classList.remove('hidden');
+        if (this.elements.labelOptText) this.elements.labelOptText.classList.remove('hidden');
         this.updateUI(true);
     },
 
     resetUI() {
-        this.elements.modeSelection.classList.remove('hidden');
-        this.elements.converterSection.classList.add('hidden');
         this.elements.dropZone.classList.remove('hidden');
         this.elements.previewContainer.classList.add('hidden');
         this.elements.controls.classList.add('hidden');
@@ -185,7 +241,7 @@ export const UIManager = {
         this.elements.origVertCountRes.textContent = '-';
         this.elements.optVertCountRes.textContent = '-';
         this.elements.origFaceCountRes.textContent = '-';
-        this.elements.optFaceCountRes.textContent = '-';
+        this.elements.resFaceCountRes.textContent = '-';
         this.updateUI();
     },
 

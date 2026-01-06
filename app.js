@@ -1,4 +1,8 @@
+import * as THREE from 'three';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter';
+import { STLExporter } from 'three/examples/jsm/exporters/STLExporter';
+import { OBJExporter } from 'three/examples/jsm/exporters/OBJExporter';
+import { USDZExporter } from 'three/examples/jsm/exporters/USDZExporter';
 import translations from './translations.js';
 import { ModelReader } from './ModelReader.js';
 import { UIManager } from './UIManager.js';
@@ -7,7 +11,8 @@ import { OptimizationManager } from './OptimizationManager.js';
 
 // Application State
 const State = {
-    currentMode: 'STL_TO_GLB',
+    inputFormat: null, // 'stl', 'obj', 'glb', 'ply'
+    targetFormat: 'glb',
     currentLanguage: 'fr',
     currentFileName: "model",
     processedBuffer: null,
@@ -32,13 +37,8 @@ function init() {
 function setupEventListeners() {
     const { elements } = UIManager;
 
-    // Mode selection
-    document.querySelectorAll('.mode-card').forEach(card => {
-        card.addEventListener('click', () => {
-            State.currentMode = card.dataset.mode;
-            UIManager.setModeUI(State.currentMode);
-        });
-    });
+    // Generic file input accept
+    elements.fileInput.accept = ".stl,.obj,.glb,.ply";
 
     // File handling
     elements.dropZone.addEventListener('click', () => elements.fileInput.click());
@@ -68,14 +68,21 @@ function setupEventListeners() {
 
     // Navigation
     elements.resetBtn.addEventListener('click', resetApp);
-    elements.backToModesBtn.addEventListener('click', resetApp);
 
-    // Download
+
     elements.downloadBtn.addEventListener('click', () => {
         if (!State.processedBuffer) return;
-        const isDraco = elements.compressCheck.checked;
-        const filename = `${State.currentFileName}${isDraco ? '.draco' : ''}.glb`;
-        downloadBlob(State.processedBuffer, filename, 'model/gltf-binary');
+        const ext = `.${State.targetFormat}`;
+        const isDraco = State.targetFormat === 'glb' && elements.compressCheck.checked;
+        const filename = `${State.currentFileName}${isDraco ? '.draco' : ''}${ext}`;
+        const mimeMap = {
+            glb: 'model/gltf-binary',
+            stl: 'application/sla',
+            obj: 'text/plain',
+            ply: 'application/octet-stream',
+            usdz: 'model/vnd.usdz+zip'
+        };
+        downloadBlob(State.processedBuffer, filename, mimeMap[State.targetFormat] || 'application/octet-stream');
     });
 
     // Comparison slider
@@ -97,23 +104,30 @@ function setupEventListeners() {
 async function handleFile(file) {
     const t = translations[State.currentLanguage];
     const ext = file.name.toLowerCase().split('.').pop();
+    const validInputs = ['stl', 'obj', 'glb', 'ply', 'fbx', '3mf'];
 
-    // Validation
-    if (State.currentMode === 'STL_TO_GLB' && ext !== 'stl') return alert(t.errStl);
-    if (State.currentMode === 'COMPRESS_GLB' && ext !== 'glb') return alert(t.errGlb);
+    if (!validInputs.includes(ext)) {
+        return alert(State.currentLanguage === 'fr' ? "Format non supporté" : "Unsupported format");
+    }
 
-    UIManager.showLoader(t.loaderReading);
+    State.inputFormat = ext;
     State.currentFileName = file.name.replace(/\.[^/.]+$/, "");
     State.originalSizeBytes = file.size;
+
+    UIManager.showLoader(t.loaderReading);
 
     const reader = new FileReader();
     reader.onload = async (e) => {
         UIManager.showLoader(t.loaderGenerating);
         try {
             const buffer = e.target.result;
-            const result = (ext === 'stl')
-                ? await ModelReader.loadSTL(buffer)
-                : await ModelReader.loadGLB(buffer, 'original');
+            let result;
+            if (ext === 'stl') result = await ModelReader.loadSTL(buffer);
+            else if (ext === 'obj') result = await ModelReader.loadOBJ(buffer);
+            else if (ext === 'ply') result = await ModelReader.loadPLY(buffer);
+            else if (ext === 'fbx') result = await ModelReader.loadFBX(buffer);
+            else if (ext === '3mf') result = await ModelReader.load3MF(buffer);
+            else result = await ModelReader.loadGLB(buffer, 'original');
 
             State.originalStats = result.stats;
             ThreeManager.setModel(result.model, result.normalization);
@@ -121,6 +135,20 @@ async function handleFile(file) {
             // Update initial stats display
             UIManager.elements.vertCount.textContent = result.stats.vertices.toLocaleString();
             UIManager.elements.faceCount.textContent = result.stats.faces.toLocaleString();
+
+            // Set up target formats based on input
+            let availableTargets = ['glb', 'stl', 'obj', 'ply', 'usdz'];
+            // If input is same as target, it's an "Optimize" or "Re-save" operation
+            State.targetFormat = 'glb';
+
+            UIManager.setAvailableFormats(availableTargets, State.targetFormat, (newTarget) => {
+                State.targetFormat = newTarget;
+                // Hide results if we switch target format to avoid confusion
+                UIManager.elements.resultsPanel.classList.add('hidden');
+                UIManager.elements.downloadBtn.classList.add('hidden');
+                UIManager.updateOptionsVisibility(State.inputFormat, State.targetFormat, State.currentFileName);
+            });
+            UIManager.updateOptionsVisibility(State.inputFormat, State.targetFormat, State.currentFileName);
 
             UIManager.showConverterUI();
             setTimeout(() => ThreeManager.resize(UIManager.elements.canvasHolder), 50);
@@ -143,51 +171,127 @@ async function runConversion() {
     UIManager.showLoader(t.loaderOptimizing);
 
     try {
-        // 1. Export current model to GLB buffer
-        const exporter = new GLTFExporter();
-        const exportObj = ThreeManager.originalModel.clone();
-        const glbBuffer = await new Promise((resolve, reject) => {
-            exporter.parse(exportObj, resolve, reject, { binary: true });
-        });
+        if (State.targetFormat !== 'glb') {
+            const format = State.targetFormat;
+            UIManager.showLoader(t.loaderOptimizing);
 
-        State.processedBuffer = glbBuffer;
+            // 1. Clone and Bake all transforms
+            const exportObj = ThreeManager.originalModel.clone();
+            exportObj.updateMatrixWorld(true);
 
-        // 2. Apply Draco if selected
-        if (elements.compressCheck.checked) {
-            const bits = parseInt(elements.compressionRange.value);
-            UIManager.showLoader(`${t.settingsDraco} (${bits} bits)...`);
-            State.processedBuffer = await OptimizationManager.applyDracoCompression(glbBuffer, bits);
-        }
+            const box = new THREE.Box3().setFromObject(exportObj);
+            const center = box.getCenter(new THREE.Vector3());
 
-        // 3. Load optimized preview
-        UIManager.showLoader(t.loaderLoading);
-        const previewResult = await ModelReader.loadGLB(State.processedBuffer, 'optimized');
-        ThreeManager.setOptimizedModel(previewResult.model);
+            exportObj.traverse(child => {
+                if (child.isMesh) {
+                    child.geometry = child.geometry.clone();
+                    child.geometry.applyMatrix4(child.matrixWorld);
+                    child.position.set(0, 0, 0);
+                    child.rotation.set(0, 0, 0);
+                    child.scale.set(1, 1, 1);
+                    child.updateMatrix();
+                }
+            });
 
-        // 4. Update UI with results
-        const finalSize = State.processedBuffer.byteLength;
-        const reduction = Math.round((1 - finalSize / State.originalSizeBytes) * 100);
+            exportObj.traverse(child => {
+                if (child.isMesh) {
+                    child.geometry.translate(-center.x, -center.y, -center.z);
+                    if (format === 'stl') child.geometry.rotateX(Math.PI / 2); // Z-up for STL
+                }
+            });
 
-        UIManager.showResults(
-            UIManager.formatBytes(State.originalSizeBytes),
-            UIManager.formatBytes(finalSize),
-            reduction,
-            {
-                vertices: State.originalStats.vertices.toLocaleString(),
-                faces: State.originalStats.faces.toLocaleString()
-            },
-            {
-                vertices: previewResult.stats.vertices.toLocaleString(),
-                faces: previewResult.stats.faces.toLocaleString()
+            State.processedBuffer = null;
+            let previewResult;
+
+            if (format === 'stl') {
+                const exporter = new STLExporter();
+                const stlData = exporter.parse(exportObj, { binary: true });
+                State.processedBuffer = stlData.buffer;
+                UIManager.showLoader(t.loaderLoading);
+                previewResult = await ModelReader.loadSTL(State.processedBuffer, true);
+                previewResult.model.position.copy(center);
+                previewResult.model.rotation.x = -Math.PI / 2;
+            } else if (format === 'obj') {
+                const exporter = new OBJExporter();
+                const objData = exporter.parse(exportObj);
+                State.processedBuffer = new TextEncoder().encode(objData).buffer;
+                UIManager.showLoader(t.loaderLoading);
+                previewResult = await ModelReader.loadOBJ(State.processedBuffer, true);
+                previewResult.model.position.copy(center);
+            } else if (format === 'ply') {
+                const exporter = new PLYExporter();
+                const plyData = exporter.parse(exportObj, () => { }, { binary: true });
+                State.processedBuffer = plyData; // PLYExporter binary returns ArrayBuffer
+                UIManager.showLoader(t.loaderLoading);
+                previewResult = await ModelReader.loadPLY(State.processedBuffer, true);
+                previewResult.model.position.copy(center);
+            } else if (format === 'usdz') {
+                const exporter = new USDZExporter();
+                const usdzData = await exporter.parse(exportObj); // USDZ.parse is async
+                State.processedBuffer = usdzData;
+                // Special case: we can't easily "preview" USDZ back in Three.js without a specific loader 
+                // (which doesn't exist officially in Three.js examples).
+                // So we'll use the GLB preview for USDZ since it's the closest representation.
+                UIManager.showLoader(t.loaderLoading);
+                previewResult = await ModelReader.loadGLB(await new Promise((res, rej) => {
+                    new GLTFExporter().parse(exportObj, res, rej, { binary: true });
+                }), 'optimized');
+                previewResult.model.position.copy(center);
             }
-        );
 
+            previewResult.model.updateMatrixWorld(true);
+            ThreeManager.setResultModel(previewResult.model);
+
+            if (State.processedBuffer) {
+                completeResults(State.processedBuffer.byteLength, previewResult.stats);
+            }
+        } else {
+            // Target is GLB (Convert or Compress)
+            const exporter = new GLTFExporter();
+            const exportObj = ThreeManager.originalModel.clone();
+            const glbBuffer = await new Promise((resolve, reject) => {
+                exporter.parse(exportObj, resolve, reject, { binary: true });
+            });
+
+            State.processedBuffer = glbBuffer;
+
+            if (elements.compressCheck.checked) {
+                const bits = parseInt(elements.compressionRange.value);
+                UIManager.showLoader(`${t.settingsDraco} (${bits} bits)...`);
+                State.processedBuffer = await OptimizationManager.applyDracoCompression(glbBuffer, bits);
+            }
+
+            UIManager.showLoader(t.loaderLoading);
+            const previewResult = await ModelReader.loadGLB(State.processedBuffer, 'optimized');
+            ThreeManager.setResultModel(previewResult.model);
+
+            if (State.processedBuffer) {
+                completeResults(State.processedBuffer.byteLength, previewResult.stats);
+            }
+        }
     } catch (err) {
         console.error("Conversion Error:", err);
         alert((State.currentLanguage === 'fr' ? "Erreur : " : "Error: ") + err.message);
     } finally {
         UIManager.hideLoader();
     }
+}
+
+function completeResults(finalSize, resStats) {
+    const reduction = Math.round((1 - finalSize / State.originalSizeBytes) * 100);
+    UIManager.showResults(
+        UIManager.formatBytes(State.originalSizeBytes),
+        UIManager.formatBytes(finalSize),
+        reduction,
+        {
+            vertices: State.originalStats.vertices.toLocaleString(),
+            faces: State.originalStats.faces.toLocaleString()
+        },
+        {
+            vertices: resStats.vertices.toLocaleString(),
+            faces: resStats.faces.toLocaleString()
+        }
+    );
 }
 
 function resetApp() {

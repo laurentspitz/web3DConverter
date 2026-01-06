@@ -53,39 +53,10 @@
                 d'œil.</p>
         </header>
 
-        <section id="mode-selection" class="mode-selection">
-            <div class="mode-card glass" data-mode="STL_TO_GLB">
-                <div class="mode-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                    </svg>
-                </div>
-                <h3 data-i18n="modeStl">Convertir STL</h3>
-                <p data-i18n="modeStlDesc">Transformez vos fichiers STL en GLB optimisés avec Draco.</p>
-                <button class="primary-btn-sm" data-i18n="btnChoose">Choisir</button>
-            </div>
-            <div class="mode-card glass" data-mode="COMPRESS_GLB">
-                <div class="mode-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path
-                            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-                        <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-                        <line x1="12" y1="22.08" x2="12" y2="12" />
-                    </svg>
-                </div>
-                <h3 data-i18n="modeGlb">Compresser GLB</h3>
-                <p data-i18n="modeGlbDesc">Réduisez drastiquement la taille de vos fichiers GLB existants.</p>
-                <button class="primary-btn-sm" data-i18n="btnChoose">Choisir</button>
-            </div>
-        </section>
 
-        <section id="converter-section" class="converter-box glass hidden">
-            <button id="back-to-modes" class="back-btn glass-compact">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <path d="M19 12H5m7 7l-7-7 7-7" />
-                </svg>
-                <span data-i18n="btnBack">Retour</span>
-            </button>
+
+        <section id="converter-section" class="converter-box glass">
+
             <div id="drop-zone" class="drop-zone">
                 <div class="drop-content">
                     <div class="icon-container">
@@ -93,7 +64,7 @@
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
                         </svg>
                     </div>
-                    <span id="drop-text" data-i18n="dropTextStl">Déposez votre fichier .STL ici</span>
+                    <span id="drop-text" data-i18n="dropZone">Déposez votre fichier (STL, OBJ, GLB, PLY) ici</span>
                     <p data-i18n="dropBrowse">ou cliquez pour choisir un fichier</p>
                     <input type="file" id="file-input" hidden>
                 </div>
@@ -110,8 +81,8 @@
                     </div>
                 </div>
                 <div class="preview-labels hidden">
-                    <span class="label-orig" data-i18n="originalLabel">Original</span>
-                    <span class="label-opt" data-i18n="optimizedLabel">Optimisé</span>
+                    <span class="label-orig" id="label-orig-text">Original</span>
+                    <span class="label-opt" id="label-opt-text">Optimisé</span>
                 </div>
                 <div class="stats glass-compact">
                     <div class="stat-item">
@@ -126,7 +97,13 @@
             </div>
 
             <div id="controls" class="controls hidden">
-                <div class="options glass-compact">
+                <div id="target-format-group" class="options glass-compact">
+                    <span class="label" data-i18n="labelTargetFormat">Convertir vers :</span>
+                    <div class="format-buttons" id="format-selection">
+                        <!-- Dynamic buttons will be inserted here -->
+                    </div>
+                </div>
+                <div id="compression-options" class="options glass-compact">
                     <label class="checkbox-container">
                         <input type="checkbox" id="compress-check" checked>
                         <span class="checkmark"></span>

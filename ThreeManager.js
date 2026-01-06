@@ -12,7 +12,7 @@ export const ThreeManager = {
     isComparing: false,
     sliderPos: 0.5,
     originalModel: null,
-    optimizedModel: null,
+    resultModel: null,
 
     init(canvasHolder) {
         this.scene = new THREE.Scene();
@@ -59,7 +59,7 @@ export const ThreeManager = {
         requestAnimationFrame(() => this.animate());
         this.orbitControls.update();
 
-        if (this.isComparing && this.originalModel && this.optimizedModel) {
+        if (this.isComparing && this.originalModel && this.resultModel) {
             const width = this.renderer.domElement.clientWidth;
             const height = this.renderer.domElement.clientHeight;
             const sliderX = this.sliderPos * width;
@@ -68,25 +68,25 @@ export const ThreeManager = {
 
             // 1. Render Original (Left side)
             this.originalModel.visible = true;
-            this.optimizedModel.visible = false;
+            this.resultModel.visible = false;
             this.renderer.setScissor(0, 0, sliderX, height);
             this.renderer.setViewport(0, 0, width, height);
             this.renderer.render(this.scene, this.camera);
 
-            // 2. Render Optimized (Right side)
+            // 2. Render Result (Right side)
             this.originalModel.visible = false;
-            this.optimizedModel.visible = true;
+            this.resultModel.visible = true;
             this.renderer.setScissor(sliderX, 0, width - sliderX, height);
             this.renderer.setViewport(0, 0, width, height);
             this.renderer.render(this.scene, this.camera);
 
             this.renderer.setScissorTest(false);
             this.originalModel.visible = true;
-            this.optimizedModel.visible = true;
+            this.resultModel.visible = true;
         } else {
             this.renderer.setScissorTest(false);
             if (this.originalModel) this.originalModel.visible = true;
-            if (this.optimizedModel) this.optimizedModel.visible = true;
+            if (this.resultModel) this.resultModel.visible = true;
             this.renderer.render(this.scene, this.camera);
         }
     },
@@ -106,12 +106,12 @@ export const ThreeManager = {
         this.orbitControls.reset();
     },
 
-    setOptimizedModel(model) {
-        if (this.optimizedModel && this.optimizedModel.parent) {
-            this.optimizedModel.parent.remove(this.optimizedModel);
+    setResultModel(model) {
+        if (this.resultModel && this.resultModel.parent) {
+            this.resultModel.parent.remove(this.resultModel);
         }
-        this.optimizedModel = model;
-        this.pivotGroup.add(this.optimizedModel);
+        this.resultModel = model;
+        this.pivotGroup.add(this.resultModel);
         this.isComparing = true;
     },
 
@@ -124,7 +124,7 @@ export const ThreeManager = {
         this.pivotGroup.rotation.set(0, 0, 0);
 
         this.originalModel = null;
-        this.optimizedModel = null;
+        this.resultModel = null;
         this.isComparing = false;
     },
 

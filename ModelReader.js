@@ -2,6 +2,10 @@ import * as THREE from 'three';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
+import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
+import { ThreeMFLoader } from 'three/examples/jsm/loaders/3MFLoader';
 
 const DRACO_DECODER_PATH = 'https://www.gstatic.com/draco/v1/decoders/';
 
@@ -11,16 +15,99 @@ export class ModelReader {
      * @param {ArrayBuffer} buffer 
      * @returns {Promise<{model: THREE.Mesh, stats: object, normalization: object}>}
      */
-    static async loadSTL(buffer) {
+    static async loadSTL(buffer, isResult = false) {
+        if (!buffer) throw new Error("Buffer is undefined");
         const loader = new STLLoader();
-        const geometry = loader.parse(buffer);
-        const material = this.getOriginalMaterial();
+        // Handle cases where buffer might be a DataView (e.g., from STLExporter)
+        const dataToParse = (buffer instanceof DataView) ? buffer.buffer : buffer;
+        const geometry = loader.parse(dataToParse);
+        const material = isResult ? this.getResultMaterial() : this.getOriginalMaterial();
         const mesh = new THREE.Mesh(geometry, material);
 
         const stats = this.extractStats(mesh);
-        const normalization = this.calculateNormalization(mesh);
+        const normalization = !isResult ? this.calculateNormalization(mesh) : null;
 
         return { model: mesh, stats, normalization };
+    }
+
+    /**
+     * Loads an OBJ model from array buffer.
+     * @param {ArrayBuffer} buffer 
+     * @returns {Promise<{model: THREE.Group, stats: object, normalization: object}>}
+     */
+    static async loadOBJ(buffer, isResult = false) {
+        if (!buffer) throw new Error("Buffer is undefined");
+        const loader = new OBJLoader();
+        const text = new TextDecoder().decode(buffer);
+        const object = loader.parse(text);
+
+        const material = isResult ? this.getResultMaterial() : this.getOriginalMaterial();
+        object.traverse(child => {
+            if (child.isMesh) {
+                child.material = material;
+            }
+        });
+
+        const stats = this.extractStats(object);
+        const normalization = !isResult ? this.calculateNormalization(object) : null;
+
+        return { model: object, stats, normalization };
+    }
+
+    /**
+     * Loads a PLY model from array buffer.
+     * @param {ArrayBuffer} buffer 
+     * @returns {Promise<{model: THREE.Mesh, stats: object, normalization: object}>}
+     */
+    static async loadPLY(buffer, isResult = false) {
+        if (!buffer) throw new Error("Buffer is undefined");
+        const loader = new PLYLoader();
+        const geometry = loader.parse(buffer);
+        if (geometry.attributes.position) {
+            geometry.computeVertexNormals();
+        }
+
+        const material = isResult ? this.getResultMaterial() : this.getOriginalMaterial();
+        const mesh = new THREE.Mesh(geometry, material);
+
+        const stats = this.extractStats(mesh);
+        const normalization = !isResult ? this.calculateNormalization(mesh) : null;
+
+        return { model: mesh, stats, normalization };
+    }
+
+    static async loadFBX(buffer, isResult = false) {
+        if (!buffer) throw new Error("Buffer is undefined");
+        const loader = new FBXLoader();
+        const blob = new Blob([buffer]);
+        const url = URL.createObjectURL(blob);
+        try {
+            const object = await loader.loadAsync(url);
+            URL.revokeObjectURL(url);
+            const stats = this.extractStats(object);
+            const normalization = !isResult ? this.calculateNormalization(object) : null;
+            return { model: object, stats, normalization };
+        } catch (e) {
+            URL.revokeObjectURL(url);
+            throw e;
+        }
+    }
+
+    static async load3MF(buffer, isResult = false) {
+        if (!buffer) throw new Error("Buffer is undefined");
+        const loader = new ThreeMFLoader();
+        const blob = new Blob([buffer]);
+        const url = URL.createObjectURL(blob);
+        try {
+            const object = await loader.loadAsync(url);
+            URL.revokeObjectURL(url);
+            const stats = this.extractStats(object);
+            const normalization = !isResult ? this.calculateNormalization(object) : null;
+            return { model: object, stats, normalization };
+        } catch (e) {
+            URL.revokeObjectURL(url);
+            throw e;
+        }
     }
 
     /**
@@ -38,13 +125,9 @@ export class ModelReader {
         return new Promise((resolve, reject) => {
             loader.parse(buffer, '', (gltf) => {
                 const scene = gltf.scene;
+                // Preserve original transforms
 
-                // Identity transforms for comparison consistency
-                scene.position.set(0, 0, 0);
-                scene.rotation.set(0, 0, 0);
-                scene.scale.setScalar(1);
-
-                const material = type === 'original' ? this.getOriginalMaterial() : this.getOptimizedMaterial();
+                const material = type === 'original' ? this.getOriginalMaterial() : this.getResultMaterial();
 
                 scene.traverse(child => {
                     if (child.isMesh) {
@@ -72,7 +155,7 @@ export class ModelReader {
         });
     }
 
-    static getOptimizedMaterial() {
+    static getResultMaterial() {
         return new THREE.MeshStandardMaterial({
             color: 0x38ef7d,
             metalness: 0.8,
