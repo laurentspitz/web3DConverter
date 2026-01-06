@@ -1,8 +1,0 @@
-#:schema node_modules/wrangler/config-schema.json
-name = "web-converter-3d"
-pages_build_output_dir = "dist"
-
-[build]
-command = "npm run build"
-
-
