@@ -4,7 +4,5 @@ pages_build_output_dir = "dist"
 
 [build]
 command = "npm run build"
-watch_dir = "src" # Adjust if your source code is in a specific folder, otherwise it defaults to monitoring everything.
+path = "src"
 
-[build.upload]
-format = "directory"
