@@ -13,6 +13,18 @@ export const ThreeManager = {
     sliderPos: 0.5,
     originalModel: null,
     resultModel: null,
+    baseScale: 1,
+
+    // Sculpting State
+    isSculptMode: false,
+    isSculpting: false,
+    brushSize: 0.5,
+    brushStrength: 0.1,
+    sculptInflate: true,
+    raycaster: new THREE.Raycaster(),
+    mouse: new THREE.Vector2(),
+    brushHelper: null,
+    sculptChanged: false,
 
     init(canvasHolder) {
         this.scene = new THREE.Scene();
@@ -41,9 +53,27 @@ export const ThreeManager = {
         this.orbitControls.enableDamping = true;
         this.orbitControls.dampingFactor = 0.05;
 
+        // Prevent context menu to allow smooth right-click panning
+        this.renderer.domElement.addEventListener('contextmenu', (e) => e.preventDefault());
+
         this.animate();
         window.addEventListener('resize', () => this.resize(canvasHolder));
         this.resize(canvasHolder);
+
+        // Sculpting Events
+        this.renderer.domElement.addEventListener('pointerdown', (e) => this.onPointerDown(e));
+        this.renderer.domElement.addEventListener('pointermove', (e) => this.onPointerMove(e));
+        this.renderer.domElement.addEventListener('pointerup', (e) => this.onPointerUp(e));
+
+        this.initBrushHelper();
+    },
+
+    initBrushHelper() {
+        const geometry = new THREE.RingGeometry(0.1, 0.12, 32);
+        const material = new THREE.MeshBasicMaterial({ color: 0x00f2fe, side: THREE.DoubleSide, transparent: true, opacity: 0.5 });
+        this.brushHelper = new THREE.Mesh(geometry, material);
+        this.brushHelper.visible = false;
+        this.scene.add(this.brushHelper);
     },
 
     resize(canvasHolder) {
@@ -98,7 +128,8 @@ export const ThreeManager = {
         // Apply normalization
         const { center, scale } = normalization;
         this.pivotGroup.position.copy(center).multiplyScalar(-1);
-        this.modelGroup.scale.setScalar(scale);
+        this.baseScale = scale;
+        this.modelGroup.scale.setScalar(this.baseScale);
 
         this.pivotGroup.add(this.originalModel);
 
@@ -153,17 +184,36 @@ export const ThreeManager = {
     autoCenter() {
         if (!this.originalModel) return;
         const box = new THREE.Box3().setFromObject(this.originalModel);
-        const center = box.getCenter(new THREE.Vector3());
-        this.originalModel.position.sub(center);
+        const center = new THREE.Vector3();
+        box.getCenter(center);
+
+        // Convert world center to parent local space
+        const localCenter = this.originalModel.parent.worldToLocal(center);
+        this.originalModel.position.sub(localCenter);
+
         if (this.resultModel) this.resultModel.position.copy(this.originalModel.position);
     },
 
     autoGround() {
         if (!this.originalModel) return;
         const box = new THREE.Box3().setFromObject(this.originalModel);
-        const minY = box.min.y;
-        this.originalModel.position.y -= minY;
-        if (this.resultModel) this.resultModel.position.y = this.originalModel.position.y;
+
+        // Find world movement needed
+        const worldMoveY = -box.min.y;
+
+        // We want to move the model by worldMoveY along the world Y axis.
+        // Get current world position
+        const worldPos = new THREE.Vector3();
+        this.originalModel.getWorldPosition(worldPos);
+
+        // Target world position
+        worldPos.y += worldMoveY;
+
+        // Convert target world position back to local parent space
+        const localPos = this.originalModel.parent.worldToLocal(worldPos);
+        this.originalModel.position.copy(localPos);
+
+        if (this.resultModel) this.resultModel.position.copy(this.originalModel.position);
     },
 
     mirrorX() {
@@ -186,8 +236,7 @@ export const ThreeManager = {
 
     applyScale(factor) {
         if (!this.originalModel || isNaN(factor)) return;
-        this.originalModel.scale.multiplyScalar(factor);
-        if (this.resultModel) this.resultModel.scale.copy(this.originalModel.scale);
+        this.modelGroup.scale.setScalar(this.baseScale * factor);
     },
 
     setWireframe(enabled) {
@@ -248,5 +297,140 @@ export const ThreeManager = {
                 }
             }
         });
+    },
+
+    // --- Sculpting Logic ---
+    setSculptMode(enabled) {
+        this.isSculptMode = enabled;
+
+        if (enabled) {
+            // Disable left-click for orbit but keep others enabled for panning/zooming
+            this.orbitControls.mouseButtons = {
+                LEFT: null,
+                MIDDLE: THREE.MOUSE.DOLLY,
+                RIGHT: THREE.MOUSE.PAN
+            };
+        } else {
+            // Restore default orbit controls
+            this.orbitControls.mouseButtons = {
+                LEFT: THREE.MOUSE.ROTATE,
+                MIDDLE: THREE.MOUSE.DOLLY,
+                RIGHT: THREE.MOUSE.PAN
+            };
+            if (this.brushHelper) this.brushHelper.visible = false;
+        }
+    },
+
+    setBrushSize(size) {
+        this.brushSize = size / 50; // Map range 1-100 to world scale
+        if (this.brushHelper) {
+            this.brushHelper.scale.setScalar(this.brushSize * 10);
+        }
+    },
+
+    setBrushStrength(strength) {
+        this.brushStrength = strength;
+    },
+
+    setSculptInflate(enabled) {
+        this.sculptInflate = enabled;
+    },
+
+    onPointerDown(e) {
+        if (!this.isSculptMode || !this.originalModel || e.button !== 0) return;
+        this.isSculpting = true;
+        this.onPointerMove(e);
+    },
+
+    onPointerMove(e) {
+        if (!this.brushHelper) return;
+
+        const rect = this.renderer.domElement.getBoundingClientRect();
+        this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+        if (this.isSculptMode && this.originalModel) {
+            this.raycaster.setFromCamera(this.mouse, this.camera);
+            const intersects = this.raycaster.intersectObject(this.originalModel, true);
+
+            if (intersects.length > 0) {
+                const hit = intersects[0];
+                this.brushHelper.visible = true;
+                this.brushHelper.position.copy(hit.point);
+                this.brushHelper.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), hit.face.normal.clone().applyQuaternion(hit.object.quaternion));
+
+                if (this.isSculpting) {
+                    this.sculptAtPoint(hit);
+                }
+            } else {
+                this.brushHelper.visible = false;
+            }
+        }
+    },
+
+    onPointerUp() {
+        this.isSculpting = false;
+        if (this.sculptChanged && this.originalModel) {
+            this.originalModel.traverse(child => {
+                if (child.isMesh) {
+                    child.geometry.computeVertexNormals();
+                    child.geometry.attributes.normal.needsUpdate = true;
+                }
+            });
+            this.sculptChanged = false;
+        }
+    },
+
+    sculptAtPoint(hit) {
+        const mesh = hit.object;
+        if (!mesh.isMesh) return;
+
+        const geometry = mesh.geometry;
+        if (!geometry || !geometry.attributes.position) return;
+
+        if (!geometry.attributes.normal) {
+            geometry.computeVertexNormals();
+        }
+
+        const position = geometry.attributes.position;
+        const normal = geometry.attributes.normal;
+
+        const localHit = mesh.worldToLocal(hit.point.clone());
+        const worldScale = mesh.getWorldScale(new THREE.Vector3()).x;
+        const localRadius = this.brushSize / worldScale;
+
+        let changed = false;
+
+        for (let i = 0; i < position.count; i++) {
+            const v = new THREE.Vector3(position.getX(i), position.getY(i), position.getZ(i));
+            const dist = v.distanceTo(localHit);
+
+            if (dist < localRadius) {
+                // Falloff factor (linear)
+                const falloff = 1 - (dist / localRadius);
+                const strength = this.brushStrength * falloff * (this.sculptInflate ? 1 : -1);
+
+                // Displace along normal
+                const nx = normal.getX(i);
+                const ny = normal.getY(i);
+                const nz = normal.getZ(i);
+
+                position.setXYZ(i,
+                    v.x + nx * strength,
+                    v.y + ny * strength,
+                    v.z + nz * strength
+                );
+                changed = true;
+                this.sculptChanged = true;
+            }
+        }
+
+        if (changed) {
+            position.needsUpdate = true;
+            geometry.computeBoundingBox();
+            geometry.computeBoundingSphere();
+            // We might need to update normals too for shading, but computeVertexNormals can be slow
+            // geometry.computeVertexNormals(); 
+        }
     }
 };

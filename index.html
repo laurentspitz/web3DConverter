@@ -182,84 +182,105 @@
                 </div>
 
                 <div id="advanced-section" class="advanced-section hidden-section">
-                    <!-- Simplification -->
+                    <!-- Block 1: Simplification & Conversion -->
                     <div class="options glass-compact">
-                        <div class="slider-group">
-                            <div class="slider-header">
-                                <span class="label" data-i18n="labelSimplify">Simplification :</span>
-                                <span id="simplify-value" class="value">0%</span>
+                        <div class="primary-controls">
+                            <div class="simplify-group-compact">
+                                <span class="mini-label" data-i18n="labelSimplifyCompact">Simplification :</span>
+                                <input type="range" id="simplify-range" min="0" max="90" value="0" step="5"
+                                    class="sm-range">
+                                <span id="simplify-value" class="sm-value">0%</span>
                             </div>
-                            <input type="range" id="simplify-range" min="0" max="90" value="0" step="5">
-                            <div class="slider-hints">
-                                <span data-i18n="labelLow">Faible</span>
-                                <span data-i18n="labelHigh">Élevée</span>
+                        </div>
+                        <div class="secondary-controls">
+                            <label class="checkbox-container">
+                                <input type="checkbox" id="weld-check">
+                                <span class="checkmark"></span>
+                                <span data-i18n="labelWeld">Soudage des points</span>
+                            </label>
+                            <label class="checkbox-container" id="compression-options">
+                                <input type="checkbox" id="compress-check" checked>
+                                <span class="checkmark"></span>
+                                <span data-i18n="settingsDraco">Compression Draco</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Block 2: Transformations -->
+                    <div class="options glass-compact">
+                        <div class="primary-controls">
+                            <div class="grid-subgroup">
+                                <span class="mini-label" data-i18n="labelRotateCompact">Rotation :</span>
+                                <div class="btn-row">
+                                    <button id="rotate-x-btn" class="edit-btn sm">X</button>
+                                    <button id="rotate-y-btn" class="edit-btn sm">Y</button>
+                                    <button id="rotate-z-btn" class="edit-btn sm">Z</button>
+                                </div>
+                            </div>
+                            <div class="grid-subgroup">
+                                <span class="mini-label" data-i18n="labelMirrorCompact">Miroir :</span>
+                                <div class="btn-row">
+                                    <button id="mirror-x-btn" class="edit-btn sm">X</button>
+                                    <button id="mirror-y-btn" class="edit-btn sm">Y</button>
+                                    <button id="mirror-z-btn" class="edit-btn sm">Z</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="secondary-controls">
+                            <div class="grid-subgroup">
+                                <span class="mini-label" data-i18n="labelScaleCompact">Échelle :</span>
+                                <div class="scale-group">
+                                    <input type="number" id="scale-input" value="1.0" step="0.1" min="0.1"
+                                        class="sm-input">
+                                    <button id="scale-apply-btn" class="edit-btn sm" data-i18n="btnOk">OK</button>
+                                </div>
+                            </div>
+                            <div class="grid-subgroup">
+                                <span class="mini-label" data-i18n="labelPosition">Position :</span>
+                                <div class="btn-row">
+                                    <button id="center-btn" class="edit-btn sm" data-i18n="btnCenter">Centrer</button>
+                                    <button id="ground-btn" class="edit-btn sm" data-i18n="btnGround">Au sol</button>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Transformations -->
-                    <div id="edit-group" class="options glass-compact">
-                        <span class="label" data-i18n="labelEdit">Édition :</span>
-                        <div class="edit-controls">
-                            <div class="edit-row">
-                                <button id="rotate-x-btn" class="edit-btn" title="Rotate X 90°">X ⟳</button>
-                                <button id="rotate-y-btn" class="edit-btn" title="Rotate Y 90°">Y ⟳</button>
-                                <button id="rotate-z-btn" class="edit-btn" title="Rotate Z 90°">Z ⟳</button>
-                            </div>
-                            <div class="edit-row">
-                                <button id="center-btn" class="edit-btn" data-i18n="btnCenter">Centrer</button>
-                                <button id="ground-btn" class="edit-btn" data-i18n="btnGround">Au sol</button>
-                            </div>
-                            <div class="edit-row separator-top">
-                                <span class="sub-label" data-i18n="labelMirror">Effet miroir :</span>
-                                <div class="edit-row">
-                                    <button id="mirror-x-btn" class="edit-btn">X</button>
-                                    <button id="mirror-y-btn" class="edit-btn">Y</button>
-                                    <button id="mirror-z-btn" class="edit-btn">Z</button>
-                                </div>
-                            </div>
-                            <div class="edit-row separator-top">
-                                <span class="sub-label" data-i18n="labelScale">Mise à l'échelle :</span>
-                                <div class="scale-input-wrapper">
-                                    <input type="number" id="scale-input" value="1.0" step="0.1" min="0.1">
-                                    <button id="scale-apply-btn" class="edit-btn">OK</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Appearance -->
+                    <!-- Block 3: Sculpture & Apparence -->
                     <div class="options glass-compact">
-                        <span class="label" data-i18n="labelAppearance">Apparence :</span>
-                        <div class="edit-controls">
-                            <div class="edit-row">
+                        <div class="primary-controls">
+                            <div class="grid-subgroup">
+                                <span class="mini-label" data-i18n="labelSculptCompact">Sculpture :</span>
+                                <button id="sculpt-toggle-btn" class="edit-btn sm brush-btn"
+                                    data-i18n="labelInactive">INACTIF</button>
+                            </div>
+                            <div class="appearance-group">
                                 <label class="checkbox-container">
                                     <input type="checkbox" id="wireframe-check">
                                     <span class="checkmark"></span>
-                                    <span data-i18n="labelWireframe">Mode filaire</span>
+                                    <span data-i18n="labelWireframe">Filaire</span>
                                 </label>
-                            </div>
-                            <div class="edit-row separator-top">
-                                <span class="sub-label" data-i18n="labelBaseColor">Couleur :</span>
-                                <input type="color" id="base-color-picker" value="#ffffff" class="color-picker">
-                            </div>
-                            <div class="edit-row separator-top">
-                                <label class="checkbox-container">
-                                    <input type="checkbox" id="weld-check">
-                                    <span class="checkmark"></span>
-                                    <span data-i18n="labelWeld">Souder (Weld)</span>
-                                </label>
+                                <span class="mini-label color-label" data-i18n="labelBaseColor">Couleur :</span>
+                                <input type="color" id="base-color-picker" value="#ffffff" class="color-picker sm">
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Optimization (Draco) -->
-                    <div id="compression-options" class="options glass-compact">
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="compress-check" checked>
-                            <span class="checkmark"></span>
-                            <span data-i18n="settingsDraco">Compression Draco</span>
-                        </label>
+                        <div id="sculpt-controls" class="secondary-controls hidden-sculpt">
+                            <div class="simplify-group-compact">
+                                <span class="mini-label" data-i18n="labelBrushSizeCompact">Taille :</span>
+                                <input type="range" id="brush-size-range" min="1" max="100" value="20" class="sm-range">
+                                <span id="brush-size-value" class="sm-value">20</span>
+                            </div>
+                            <div class="simplify-group-compact">
+                                <span class="mini-label" data-i18n="labelBrushStrengthCompact">Force :</span>
+                                <input type="range" id="brush-strength-range" min="0" max="1" step="0.01" value="0.1"
+                                    class="sm-range">
+                                <span id="brush-strength-value" class="sm-value">0.1</span>
+                            </div>
+                            <label class="checkbox-container">
+                                <input type="checkbox" id="sculpt-inflate-check" checked>
+                                <span class="checkmark"></span>
+                                <span data-i18n="labelSculptInflate">±</span>
+                            </label>
+                        </div>
                     </div>
                 </div>
 
@@ -340,7 +361,7 @@
             <div id="ad-container" class="ad-container-integrated hidden">
                 <span class="ad-badge" data-i18n="adNotice">Publicité</span>
                 <div class="ad-placeholder">
-                    <p>Votre publicité ici</p>
+                    <p data-i18n="adPlaceholder">Votre publicité ici</p>
                     <p class="ad-sub">Carbon Ads / EthicalAds</p>
                 </div>
             </div>
@@ -379,7 +400,7 @@
 
     <div id="loader" class="loader-overlay hidden">
         <div class="spinner"></div>
-        <p>Conversion en cours...</p>
+        <p data-i18n="loaderDefault">Conversion en cours...</p>
     </div>
 
     <script type="module" src="./src/app.js"></script>

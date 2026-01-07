@@ -319,8 +319,11 @@ body {
     flex-wrap: wrap;
 }
 
-.edit-btn {
+.edit-row .edit-btn {
     flex: 1;
+}
+
+.edit-btn {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: white;
@@ -451,13 +454,240 @@ body {
     border-radius: 6px;
 }
 
+.brush-btn.active {
+    background: var(--accent);
+    color: var(--primary);
+    box-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
+}
+
+.hidden-sculpt {
+    display: none !important;
+}
+
+.slider-group.compact {
+    margin: 0.5rem 0;
+    gap: 0.25rem;
+}
+
+.slider-group.compact .label {
+    font-size: 0.85rem;
+}
+
+/* Standardized Block Structure (Phase 5) */
+.primary-controls {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-bottom: 0.75rem;
+}
+
+.secondary-controls {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding-top: 0.75rem;
+}
+
+.appearance-group {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.transform-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem 1.5rem;
+    align-items: center;
+}
+
+.grid-subgroup {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.grid-subgroup.wide {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    margin-top: 0.25rem;
+}
+
+.mini-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    opacity: 0.7;
+    text-transform: uppercase;
+    white-space: nowrap;
+    min-width: 90px;
+    flex-shrink: 0;
+}
+
+.edit-btn.sm {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.8rem;
+    min-width: 40px;
+    width: auto;
+}
+
+.color-label {
+    margin-left: 0.5rem;
+}
+
+/* Mobile Tweak for Advanced Section (Phase 5) */
+@media (max-width: 650px) {
+
+    .primary-controls,
+    .secondary-controls {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .simplify-group-compact,
+    .scale-group,
+    .appearance-group {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .mini-label {
+        min-width: 100px;
+    }
+
+    .secondary-controls {
+        padding-top: 0.75rem;
+        margin-top: 0.25rem;
+    }
+}
+
+.scale-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.color-picker.sm {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border-radius: 50%;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.color-picker.sm::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.sm-input {
+    width: 50px;
+    padding: 0.25rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    color: white;
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+.sm-range {
+    flex: 1;
+    min-width: 60px;
+}
+
+.sm-value {
+    font-size: 0.8rem;
+    min-width: 30px;
+    text-align: right;
+    font-family: monospace;
+}
+
+.btn-row {
+    display: flex;
+    gap: 0.25rem;
+    flex-shrink: 0;
+    align-items: center;
+    flex: 1;
+}
+
+.btn-row .edit-btn {
+    flex: 1;
+}
+
+.scale-group,
+.simplify-group-compact {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+    min-width: 200px;
+    /* Prevent too narrow sliders on mobile */
+}
+
 .checkbox-container {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     cursor: pointer;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     user-select: none;
+    position: relative;
+}
+
+.checkbox-container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.checkmark {
+    height: 18px;
+    width: 18px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    display: inline-block;
+    position: relative;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.checkbox-container:hover input~.checkmark {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--accent);
+}
+
+.checkbox-container input:checked~.checkmark {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+    left: 6px;
+    top: 2px;
+    width: 5px;
+    height: 10px;
+    border: solid var(--bg-dark);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.checkbox-container input:checked~.checkmark:after {
+    display: block;
 }
 
 .info {

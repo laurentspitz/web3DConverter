@@ -125,7 +125,6 @@ function setupEventListeners() {
         const factor = parseFloat(elements.scaleInput.value);
         if (!isNaN(factor) && factor > 0) {
             ThreeManager.applyScale(factor);
-            elements.scaleInput.value = '1.0'; // Reset after apply
         }
     });
 
@@ -135,6 +134,34 @@ function setupEventListeners() {
 
     elements.baseColorPicker.addEventListener('input', (e) => {
         ThreeManager.setBaseColor(e.target.value);
+    });
+
+    // Sculpting Events
+    elements.sculptToggleBtn.addEventListener('click', () => {
+        const isActive = !ThreeManager.isSculptMode;
+        ThreeManager.setSculptMode(isActive);
+        elements.sculptToggleBtn.classList.toggle('active', isActive);
+
+        const t = translations[UIManager.currentLanguage];
+        elements.sculptToggleBtn.textContent = isActive ? t.labelActive : t.labelInactive;
+
+        elements.sculptControls.classList.toggle('hidden-sculpt', !isActive);
+    });
+
+    elements.brushSizeRange.addEventListener('input', (e) => {
+        const val = e.target.value;
+        elements.brushSizeValue.textContent = val;
+        ThreeManager.setBrushSize(parseInt(val));
+    });
+
+    elements.brushStrengthRange.addEventListener('input', (e) => {
+        const val = e.target.value;
+        elements.brushStrengthValue.textContent = val;
+        ThreeManager.setBrushStrength(parseFloat(val));
+    });
+
+    elements.sculptInflateCheck.addEventListener('change', (e) => {
+        ThreeManager.setSculptInflate(e.target.checked);
     });
 }
 
@@ -146,7 +173,7 @@ async function handleFile(file) {
     const validInputs = ['stl', 'obj', 'glb', 'ply', 'fbx', '3mf', 'usdz'];
 
     if (!validInputs.includes(ext)) {
-        return alert(State.currentLanguage === 'fr' ? "Format non supporté" : "Unsupported format");
+        return alert(t.errUnsupportedFormat || (State.currentLanguage === 'fr' ? "Format non supporté" : "Unsupported format"));
     }
 
     State.inputFormat = ext;
@@ -321,7 +348,7 @@ async function runConversion() {
         }
     } catch (err) {
         console.error("Conversion Error:", err);
-        alert((State.currentLanguage === 'fr' ? "Erreur : " : "Error: ") + err.message);
+        alert((t.errGeneral || (State.currentLanguage === 'fr' ? "Erreur : " : "Error: ")) + err.message);
     } finally {
         UIManager.hideLoader();
     }
@@ -347,6 +374,10 @@ function completeResults(finalSize, resStats) {
 function resetApp() {
     ThreeManager.clearModels();
     UIManager.resetUI();
+    State.inputFormat = null;
+    State.targetFormat = 'glb';
+    State.processedBuffer = null;
+    State.originalStats = null;
 }
 
 function downloadBlob(buffer, filename, type) {

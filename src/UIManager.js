@@ -58,7 +58,16 @@ export const UIManager = {
         scaleInput: document.getElementById('scale-input'),
         scaleApplyBtn: document.getElementById('scale-apply-btn'),
         wireframeCheck: document.getElementById('wireframe-check'),
-        baseColorPicker: document.getElementById('base-color-picker')
+        baseColorPicker: document.getElementById('base-color-picker'),
+
+        // Sculpting
+        sculptToggleBtn: document.getElementById('sculpt-toggle-btn'),
+        sculptControls: document.getElementById('sculpt-controls'),
+        brushSizeRange: document.getElementById('brush-size-range'),
+        brushSizeValue: document.getElementById('brush-size-value'),
+        brushStrengthRange: document.getElementById('brush-strength-range'),
+        brushStrengthValue: document.getElementById('brush-strength-value'),
+        sculptInflateCheck: document.getElementById('sculpt-inflate-check')
     },
 
     currentLanguage: 'fr',
@@ -193,7 +202,7 @@ export const UIManager = {
 
         // Draco only for GLB output
         if (targetFormat === 'glb') {
-            this.elements.compressionOptions.style.display = 'block';
+            this.elements.compressionOptions.style.display = 'flex';
         } else {
             this.elements.compressionOptions.style.display = 'none';
         }
@@ -262,11 +271,19 @@ export const UIManager = {
 
         this.elements.fileInput.value = '';
         this.elements.weldCheck.checked = false;
+        this.elements.compressCheck.checked = true;
         this.elements.simplifyRange.value = 0;
         this.elements.simplifyValue.textContent = '0%';
         this.elements.scaleInput.value = '1.0';
         this.elements.wireframeCheck.checked = false;
         this.elements.baseColorPicker.value = '#ffffff';
+        this.elements.sculptToggleBtn.classList.remove('active');
+        this.elements.sculptControls.classList.add('hidden-sculpt');
+        this.elements.brushSizeRange.value = 20;
+        this.elements.brushSizeValue.textContent = '20';
+        this.elements.brushStrengthRange.value = 0.1;
+        this.elements.brushStrengthValue.textContent = '0.1';
+        this.elements.sculptInflateCheck.checked = true;
         this.elements.advancedSection.classList.add('hidden-section');
         this.elements.advancedToggleBtn.classList.remove('active');
         this.elements.origVertCountRes.textContent = '-';
