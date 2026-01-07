@@ -5,7 +5,7 @@ import { OBJExporter } from 'three/examples/jsm/exporters/OBJExporter';
 import { PLYExporter } from 'three/examples/jsm/exporters/PLYExporter';
 import { USDZExporter } from 'three/examples/jsm/exporters/USDZExporter';
 import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils';
-import translations from './translations.js';
+import translations from './i18n/index.js';
 import { ModelReader } from './ModelReader.js';
 import { UIManager } from './UIManager.js';
 import { ThreeManager } from './ThreeManager.js';

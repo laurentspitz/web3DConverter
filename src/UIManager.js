@@ -1,4 +1,4 @@
-import translations from './translations.js';
+import translations from './i18n/index.js';
 
 export const UIManager = {
     // DOM Elements
