@@ -18,6 +18,7 @@
     "@gltf-transform/functions": "^3.10.1",
     "draco3d": "^1.5.7",
     "fflate": "^0.8.2",
+    "meshoptimizer": "^1.0.1",
     "three": "^0.160.0"
   }
 }

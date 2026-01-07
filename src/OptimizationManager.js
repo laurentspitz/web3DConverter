@@ -1,6 +1,7 @@
 import { WebIO } from '@gltf-transform/core';
-import { KHRDracoMeshCompression } from '@gltf-transform/extensions';
-import { weld, quantize, draco, prune, dedup } from '@gltf-transform/functions';
+import { KHRDracoMeshCompression, KHRMeshQuantization } from '@gltf-transform/extensions';
+import { weld, quantize, draco, prune, dedup, simplify } from '@gltf-transform/functions';
+import { MeshoptSimplifier } from 'meshoptimizer';
 import draco3d from 'draco3d';
 
 export const OptimizationManager = {
@@ -18,37 +19,61 @@ export const OptimizationManager = {
         }
     },
 
-    async applyDracoCompression(buffer, quantizationBits = 14) {
-        console.time('Draco Compression');
-        await this.initDraco();
+    async optimize(buffer, options = {}) {
+        const { weld: useWeld = false, draco: useDraco = false, simplify: simplifyRatio = 0, quantizationBits = 14 } = options;
 
-        const io = new WebIO()
-            .registerExtensions([KHRDracoMeshCompression])
-            .registerDependencies({
-                'draco3d.encoder': this.cachedDracoEncoder,
-                'draco3d.decoder': this.cachedDracoDecoder
-            });
+        console.time('Optimization');
+        const io = new WebIO().registerExtensions([KHRMeshQuantization]);
+
+        if (useDraco) {
+            await this.initDraco();
+            io.registerExtensions([KHRDracoMeshCompression])
+                .registerDependencies({
+                    'draco3d.encoder': this.cachedDracoEncoder,
+                    'draco3d.decoder': this.cachedDracoDecoder
+                });
+        }
 
         const document = await io.readBinary(new Uint8Array(buffer));
+        const transforms = [];
 
-        // Pipeline: Weld -> Dedup -> Quantize -> Draco -> Prune
-        await document.transform(
-            weld(),
-            dedup(),
-            quantize({
-                quantizePositionBits: quantizationBits,
-                quantizeNormalBits: Math.max(6, quantizationBits - 2)
-            }),
-            draco({
-                method: 'edgebreaker',
-                quantizePositionBits: quantizationBits,
-                quantizeNormalBits: Math.max(6, quantizationBits - 2)
-            }),
-            prune()
-        );
+        if (useWeld) {
+            transforms.push(weld());
+        }
+
+        if (simplifyRatio > 0) {
+            await MeshoptSimplifier.ready;
+            transforms.push(simplify({
+                simplifier: MeshoptSimplifier,
+                ratio: 1 - (simplifyRatio / 100),
+                error: 0.001
+            }));
+        }
+
+        if (useDraco) {
+            transforms.push(
+                dedup(),
+                quantize({
+                    quantizePositionBits: quantizationBits,
+                    quantizeNormalBits: Math.max(6, quantizationBits - 2)
+                }),
+                draco({
+                    method: 'edgebreaker',
+                    quantizePositionBits: quantizationBits,
+                    quantizeNormalBits: Math.max(6, quantizationBits - 2)
+                }),
+                prune()
+            );
+        } else if (useWeld || simplifyRatio > 0) {
+            transforms.push(dedup(), prune());
+        }
+
+        if (transforms.length > 0) {
+            await document.transform(...transforms);
+        }
 
         const outBuffer = (await io.writeBinary(document)).buffer;
-        console.timeEnd('Draco Compression');
+        console.timeEnd('Optimization');
         return outBuffer;
     }
 };

@@ -171,13 +171,98 @@
                         <!-- Dynamic buttons will be inserted here -->
                     </div>
                 </div>
-                <div id="compression-options" class="options glass-compact">
-                    <label class="checkbox-container">
-                        <input type="checkbox" id="compress-check" checked>
-                        <span class="checkmark"></span>
-                        <span data-i18n="settingsDraco">Compression Draco</span>
-                    </label>
+
+                <div class="advanced-toggle-wrapper">
+                    <button id="advanced-toggle-btn" class="toggle-btn">
+                        <span data-i18n="btnToggleAdvanced">Options avancées</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="chevron">
+                            <path d="M6 9l6 6 6-6" />
+                        </svg>
+                    </button>
                 </div>
+
+                <div id="advanced-section" class="advanced-section hidden-section">
+                    <!-- Simplification -->
+                    <div class="options glass-compact">
+                        <div class="slider-group">
+                            <div class="slider-header">
+                                <span class="label" data-i18n="labelSimplify">Simplification :</span>
+                                <span id="simplify-value" class="value">0%</span>
+                            </div>
+                            <input type="range" id="simplify-range" min="0" max="90" value="0" step="5">
+                            <div class="slider-hints">
+                                <span data-i18n="labelLow">Faible</span>
+                                <span data-i18n="labelHigh">Élevée</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transformations -->
+                    <div id="edit-group" class="options glass-compact">
+                        <span class="label" data-i18n="labelEdit">Édition :</span>
+                        <div class="edit-controls">
+                            <div class="edit-row">
+                                <button id="rotate-x-btn" class="edit-btn" title="Rotate X 90°">X ⟳</button>
+                                <button id="rotate-y-btn" class="edit-btn" title="Rotate Y 90°">Y ⟳</button>
+                                <button id="rotate-z-btn" class="edit-btn" title="Rotate Z 90°">Z ⟳</button>
+                            </div>
+                            <div class="edit-row">
+                                <button id="center-btn" class="edit-btn" data-i18n="btnCenter">Centrer</button>
+                                <button id="ground-btn" class="edit-btn" data-i18n="btnGround">Au sol</button>
+                            </div>
+                            <div class="edit-row separator-top">
+                                <span class="sub-label" data-i18n="labelMirror">Effet miroir :</span>
+                                <div class="edit-row">
+                                    <button id="mirror-x-btn" class="edit-btn">X</button>
+                                    <button id="mirror-y-btn" class="edit-btn">Y</button>
+                                    <button id="mirror-z-btn" class="edit-btn">Z</button>
+                                </div>
+                            </div>
+                            <div class="edit-row separator-top">
+                                <span class="sub-label" data-i18n="labelScale">Mise à l'échelle :</span>
+                                <div class="scale-input-wrapper">
+                                    <input type="number" id="scale-input" value="1.0" step="0.1" min="0.1">
+                                    <button id="scale-apply-btn" class="edit-btn">OK</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Appearance -->
+                    <div class="options glass-compact">
+                        <span class="label" data-i18n="labelAppearance">Apparence :</span>
+                        <div class="edit-controls">
+                            <div class="edit-row">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="wireframe-check">
+                                    <span class="checkmark"></span>
+                                    <span data-i18n="labelWireframe">Mode filaire</span>
+                                </label>
+                            </div>
+                            <div class="edit-row separator-top">
+                                <span class="sub-label" data-i18n="labelBaseColor">Couleur :</span>
+                                <input type="color" id="base-color-picker" value="#ffffff" class="color-picker">
+                            </div>
+                            <div class="edit-row separator-top">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="weld-check">
+                                    <span class="checkmark"></span>
+                                    <span data-i18n="labelWeld">Souder (Weld)</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Optimization (Draco) -->
+                    <div id="compression-options" class="options glass-compact">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="compress-check" checked>
+                            <span class="checkmark"></span>
+                            <span data-i18n="settingsDraco">Compression Draco</span>
+                        </label>
+                    </div>
+                </div>
+
                 <div id="action-buttons" class="action-buttons">
                     <button id="convert-btn" class="primary-btn">
                         <span data-i18n="btnConvert">Lancer la Conversion</span>

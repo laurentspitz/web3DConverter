@@ -130,5 +130,123 @@ export const ThreeManager = {
 
     setSliderPos(pos) {
         this.sliderPos = pos;
+    },
+
+    rotateX() {
+        if (!this.originalModel) return;
+        this.originalModel.rotation.x += Math.PI / 2;
+        if (this.resultModel) this.resultModel.rotation.x = this.originalModel.rotation.x;
+    },
+
+    rotateY() {
+        if (!this.originalModel) return;
+        this.originalModel.rotation.y += Math.PI / 2;
+        if (this.resultModel) this.resultModel.rotation.y = this.originalModel.rotation.y;
+    },
+
+    rotateZ() {
+        if (!this.originalModel) return;
+        this.originalModel.rotation.z += Math.PI / 2;
+        if (this.resultModel) this.resultModel.rotation.z = this.originalModel.rotation.z;
+    },
+
+    autoCenter() {
+        if (!this.originalModel) return;
+        const box = new THREE.Box3().setFromObject(this.originalModel);
+        const center = box.getCenter(new THREE.Vector3());
+        this.originalModel.position.sub(center);
+        if (this.resultModel) this.resultModel.position.copy(this.originalModel.position);
+    },
+
+    autoGround() {
+        if (!this.originalModel) return;
+        const box = new THREE.Box3().setFromObject(this.originalModel);
+        const minY = box.min.y;
+        this.originalModel.position.y -= minY;
+        if (this.resultModel) this.resultModel.position.y = this.originalModel.position.y;
+    },
+
+    mirrorX() {
+        if (!this.originalModel) return;
+        this.originalModel.scale.x *= -1;
+        if (this.resultModel) this.resultModel.scale.x = this.originalModel.scale.x;
+    },
+
+    mirrorY() {
+        if (!this.originalModel) return;
+        this.originalModel.scale.y *= -1;
+        if (this.resultModel) this.resultModel.scale.y = this.originalModel.scale.y;
+    },
+
+    mirrorZ() {
+        if (!this.originalModel) return;
+        this.originalModel.scale.z *= -1;
+        if (this.resultModel) this.resultModel.scale.z = this.originalModel.scale.z;
+    },
+
+    applyScale(factor) {
+        if (!this.originalModel || isNaN(factor)) return;
+        this.originalModel.scale.multiplyScalar(factor);
+        if (this.resultModel) this.resultModel.scale.copy(this.originalModel.scale);
+    },
+
+    setWireframe(enabled) {
+        if (!this.originalModel) return;
+        this.originalModel.traverse(child => {
+            if (child.isMesh && child.material) {
+                if (Array.isArray(child.material)) {
+                    child.material.forEach(m => m.wireframe = enabled);
+                } else {
+                    child.material.wireframe = enabled;
+                }
+            }
+        });
+        if (this.resultModel) this.setWireframeForResult(enabled);
+    },
+
+    setWireframeForResult(enabled) {
+        if (!this.resultModel) return;
+        this.resultModel.traverse(child => {
+            if (child.isMesh && child.material) {
+                if (Array.isArray(child.material)) {
+                    child.material.forEach(m => m.wireframe = enabled);
+                } else {
+                    child.material.wireframe = enabled;
+                }
+            }
+        });
+    },
+
+    setBaseColor(hex) {
+        if (!this.originalModel) return;
+        const color = new THREE.Color(hex);
+        this.originalModel.traverse(child => {
+            if (child.isMesh && child.material) {
+                if (Array.isArray(child.material)) {
+                    child.material.forEach(m => {
+                        if (m.color) m.color.copy(color);
+                    });
+                } else {
+                    if (child.material.color) child.material.color.copy(color);
+                }
+            }
+        });
+        if (this.resultModel) this.setBaseColorForResult(hex);
+    },
+
+    setBaseColorForResult(hex) {
+        if (!this.resultModel) return;
+        const color = new THREE.Color(hex);
+        this.resultModel.traverse(child => {
+            if (child.isMesh && child.material) {
+                if (Array.isArray(child.material)) {
+                    child.material.forEach(m => {
+                        if (m.color) m.color.copy(color);
+                    });
+                } else {
+                    if (child.material.color) child.material.color.copy(color);
+                }
+            }
+        });
     }
 };

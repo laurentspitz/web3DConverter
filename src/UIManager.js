@@ -37,7 +37,28 @@ export const UIManager = {
         formatSelection: document.getElementById('format-selection'),
         targetFormatGroup: document.getElementById('target-format-group'),
         labelOrigText: document.getElementById('label-orig-text'),
-        labelOptText: document.getElementById('label-opt-text')
+        labelOptText: document.getElementById('label-opt-text'),
+
+        // Edition
+        rotateXBtn: document.getElementById('rotate-x-btn'),
+        rotateYBtn: document.getElementById('rotate-y-btn'),
+        rotateZBtn: document.getElementById('rotate-z-btn'),
+        centerBtn: document.getElementById('center-btn'),
+        groundBtn: document.getElementById('ground-btn'),
+        weldCheck: document.getElementById('weld-check'),
+        advancedToggleBtn: document.getElementById('advanced-toggle-btn'),
+        advancedSection: document.getElementById('advanced-section'),
+
+        // Advanced Features
+        simplifyRange: document.getElementById('simplify-range'),
+        simplifyValue: document.getElementById('simplify-value'),
+        mirrorXBtn: document.getElementById('mirror-x-btn'),
+        mirrorYBtn: document.getElementById('mirror-y-btn'),
+        mirrorZBtn: document.getElementById('mirror-z-btn'),
+        scaleInput: document.getElementById('scale-input'),
+        scaleApplyBtn: document.getElementById('scale-apply-btn'),
+        wireframeCheck: document.getElementById('wireframe-check'),
+        baseColorPicker: document.getElementById('base-color-picker')
     },
 
     currentLanguage: 'fr',
@@ -240,6 +261,14 @@ export const UIManager = {
         this.elements.resultsPanel.classList.add('hidden');
 
         this.elements.fileInput.value = '';
+        this.elements.weldCheck.checked = false;
+        this.elements.simplifyRange.value = 0;
+        this.elements.simplifyValue.textContent = '0%';
+        this.elements.scaleInput.value = '1.0';
+        this.elements.wireframeCheck.checked = false;
+        this.elements.baseColorPicker.value = '#ffffff';
+        this.elements.advancedSection.classList.add('hidden-section');
+        this.elements.advancedToggleBtn.classList.remove('active');
         this.elements.origVertCountRes.textContent = '-';
         this.elements.optVertCountRes.textContent = '-';
         this.elements.origFaceCountRes.textContent = '-';

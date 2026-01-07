@@ -4,6 +4,7 @@ import { STLExporter } from 'three/examples/jsm/exporters/STLExporter';
 import { OBJExporter } from 'three/examples/jsm/exporters/OBJExporter';
 import { PLYExporter } from 'three/examples/jsm/exporters/PLYExporter';
 import { USDZExporter } from 'three/examples/jsm/exporters/USDZExporter';
+import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils';
 import translations from './translations.js';
 import { ModelReader } from './ModelReader.js';
 import { UIManager } from './UIManager.js';
@@ -91,6 +92,50 @@ function setupEventListeners() {
         elements.comparisonSlider.style.left = `${x * 100}%`;
         ThreeManager.setSliderPos(x);
     });
+
+    // Edition Events
+    elements.rotateXBtn.addEventListener('click', () => ThreeManager.rotateX());
+    elements.rotateYBtn.addEventListener('click', () => ThreeManager.rotateY());
+    elements.rotateZBtn.addEventListener('click', () => ThreeManager.rotateZ());
+    elements.centerBtn.addEventListener('click', () => ThreeManager.autoCenter());
+    elements.groundBtn.addEventListener('click', () => ThreeManager.autoGround());
+
+    // Advanced Toggle
+    elements.advancedToggleBtn.addEventListener('click', () => {
+        const isHidden = elements.advancedSection.classList.contains('hidden-section');
+        if (isHidden) {
+            elements.advancedSection.classList.remove('hidden-section');
+            elements.advancedToggleBtn.classList.add('active');
+        } else {
+            elements.advancedSection.classList.add('hidden-section');
+            elements.advancedToggleBtn.classList.remove('active');
+        }
+    });
+
+    // Advanced UI Events
+    elements.simplifyRange.addEventListener('input', (e) => {
+        elements.simplifyValue.textContent = `${e.target.value}%`;
+    });
+
+    elements.mirrorXBtn.addEventListener('click', () => ThreeManager.mirrorX());
+    elements.mirrorYBtn.addEventListener('click', () => ThreeManager.mirrorY());
+    elements.mirrorZBtn.addEventListener('click', () => ThreeManager.mirrorZ());
+
+    elements.scaleApplyBtn.addEventListener('click', () => {
+        const factor = parseFloat(elements.scaleInput.value);
+        if (!isNaN(factor) && factor > 0) {
+            ThreeManager.applyScale(factor);
+            elements.scaleInput.value = '1.0'; // Reset after apply
+        }
+    });
+
+    elements.wireframeCheck.addEventListener('change', (e) => {
+        ThreeManager.setWireframe(e.target.checked);
+    });
+
+    elements.baseColorPicker.addEventListener('input', (e) => {
+        ThreeManager.setBaseColor(e.target.value);
+    });
 }
 
 // --- Core Workflows ---
@@ -171,25 +216,24 @@ async function runConversion() {
             const format = State.targetFormat;
             UIManager.showLoader(t.loaderOptimizing);
 
-            // 1. Clone and Restore original scale
+            // 1. Clone original model with user transforms
             const exportObj = ThreeManager.originalModel.clone();
-            // Ensure no leftover preview transforms from parents
-            exportObj.scale.set(1, 1, 1);
-            exportObj.position.set(0, 0, 0);
-            exportObj.rotation.set(0, 0, 0);
-            exportObj.updateMatrixWorld(true);
 
-            // 2. Compute center of the original model (at scale 1.0)
-            const box = new THREE.Box3().setFromObject(exportObj);
-            const center = box.getCenter(new THREE.Vector3());
+            // 2. Apply "Weld" if requested (manual implementation for Three.js geometry)
+            if (elements.weldCheck.checked) {
+                exportObj.traverse(child => {
+                    if (child.isMesh && child.geometry) {
+                        child.geometry = BufferGeometryUtils.mergeVertices(child.geometry);
+                    }
+                });
+            }
 
-            // 3. Setup Export Wrapper for Orientation/Centering
-            // This is safer than baking geometry as it preserves model integrity
+            // 3. Setup Export Wrapper for Orientation (Standardization)
             const wrapper = new THREE.Object3D();
             wrapper.add(exportObj);
 
-            // Move model within wrapper so it's centered at origin
-            exportObj.position.copy(center).multiplyScalar(-1);
+            // We respect the position relative to origin that the user set (Rotation/Center/Ground)
+            // But we might need to handle specific format orientation standards if not already handled
 
             // Standards: GLB/OBJ are Y-up. STL is usually Z-up.
             if (format === 'stl' && State.inputFormat !== 'stl') {
@@ -256,10 +300,15 @@ async function runConversion() {
 
             State.processedBuffer = glbBuffer;
 
-            if (elements.compressCheck.checked) {
-                const bits = 11; // Optimization: Fixed 11-bit quantization for best compatibility/size
-                UIManager.showLoader(`${t.settingsDraco} (${bits} bits)...`);
-                State.processedBuffer = await OptimizationManager.applyDracoCompression(glbBuffer, bits);
+            if (elements.compressCheck.checked || elements.weldCheck.checked || elements.simplifyRange.value > 0) {
+                const bits = 11;
+                UIManager.showLoader(t.loaderOptimizing);
+                State.processedBuffer = await OptimizationManager.optimize(glbBuffer, {
+                    weld: elements.weldCheck.checked,
+                    simplify: parseInt(elements.simplifyRange.value),
+                    draco: elements.compressCheck.checked,
+                    quantizationBits: bits
+                });
             }
 
             UIManager.showLoader(t.loaderLoading);
