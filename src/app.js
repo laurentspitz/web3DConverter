@@ -12,7 +12,7 @@ import { OptimizationManager } from './OptimizationManager.js';
 
 // Application State
 const State = {
-    inputFormat: null, // 'stl', 'obj', 'glb', 'ply'
+    inputFormat: null, // 'stl', 'obj', 'glb', 'ply', 'usdz'
     targetFormat: 'glb',
     currentLanguage: 'fr',
     currentFileName: "model",
@@ -39,7 +39,7 @@ function setupEventListeners() {
     const { elements } = UIManager;
 
     // Generic file input accept
-    elements.fileInput.accept = ".stl,.obj,.glb,.ply,.fbx,.3mf";
+    elements.fileInput.accept = ".stl,.obj,.glb,.ply,.fbx,.3mf,.usdz";
 
     // File handling
     elements.dropZone.addEventListener('click', () => elements.fileInput.click());
@@ -98,7 +98,7 @@ function setupEventListeners() {
 async function handleFile(file) {
     const t = translations[State.currentLanguage];
     const ext = file.name.toLowerCase().split('.').pop();
-    const validInputs = ['stl', 'obj', 'glb', 'ply', 'fbx', '3mf'];
+    const validInputs = ['stl', 'obj', 'glb', 'ply', 'fbx', '3mf', 'usdz'];
 
     if (!validInputs.includes(ext)) {
         return alert(State.currentLanguage === 'fr' ? "Format non supporté" : "Unsupported format");
@@ -121,6 +121,7 @@ async function handleFile(file) {
             else if (ext === 'ply') result = await ModelReader.loadPLY(buffer);
             else if (ext === 'fbx') result = await ModelReader.loadFBX(buffer);
             else if (ext === '3mf') result = await ModelReader.load3MF(buffer);
+            else if (ext === 'usdz') result = await ModelReader.loadUSDZ(buffer);
             else result = await ModelReader.loadGLB(buffer, 'original');
 
             State.originalStats = result.stats;

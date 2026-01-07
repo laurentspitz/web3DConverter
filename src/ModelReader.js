@@ -6,6 +6,7 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { ThreeMFLoader } from 'three/examples/jsm/loaders/3MFLoader';
+import { USDZLoader } from 'three/examples/jsm/loaders/USDZLoader';
 import * as fflate from 'fflate';
 
 const DRACO_DECODER_PATH = 'https://www.gstatic.com/draco/v1/decoders/';
@@ -116,6 +117,29 @@ export class ModelReader {
         }
     }
 
+    /**
+     * Loads a USDZ model from array buffer.
+     * @param {ArrayBuffer} buffer 
+     * @param {boolean} isResult 
+     * @returns {Promise<{model: THREE.Object3D, stats: object, normalization: object}>}
+     */
+    static async loadUSDZ(buffer, isResult = false) {
+        if (!buffer) throw new Error("Buffer is undefined");
+        const loader = new USDZLoader();
+        const group = await loader.parse(buffer);
+
+        const material = isResult ? this.getResultMaterial() : this.getOriginalMaterial();
+        group.traverse(child => {
+            if (child.isMesh) {
+                child.material = material;
+            }
+        });
+
+        const stats = this.extractStats(group);
+        const normalization = !isResult ? this.calculateNormalization(group) : null;
+
+        return { model: group, stats, normalization };
+    }
     /**
      * Loads a GLB model from array buffer.
      * @param {ArrayBuffer} buffer 
