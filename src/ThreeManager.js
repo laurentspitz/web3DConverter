@@ -40,12 +40,16 @@ export const ThreeManager = {
         this.renderer.setPixelRatio(window.devicePixelRatio);
         canvasHolder.appendChild(this.renderer.domElement);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
         this.scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
-        directionalLight.position.set(5, 10, 7);
-        this.scene.add(directionalLight);
+        const directionalLight1 = new THREE.DirectionalLight(0xffffff, 1.0);
+        directionalLight1.position.set(5, 10, 7);
+        this.scene.add(directionalLight1);
+
+        const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.5);
+        directionalLight2.position.set(-5, -5, -5); // Light from the back/bottom
+        this.scene.add(directionalLight2);
 
         this.camera.position.set(0, 0, 5);
 

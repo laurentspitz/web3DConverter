@@ -179,8 +179,8 @@ export class ModelReader {
     static getOriginalMaterial() {
         return new THREE.MeshStandardMaterial({
             color: 0x00f2fe,
-            metalness: 0.7,
-            roughness: 0.2,
+            metalness: 0.1,
+            roughness: 0.8,
             flatShading: true
         });
     }
@@ -188,8 +188,8 @@ export class ModelReader {
     static getResultMaterial() {
         return new THREE.MeshStandardMaterial({
             color: 0x38ef7d,
-            metalness: 0.8,
-            roughness: 0.1,
+            metalness: 0.1,
+            roughness: 0.8,
             flatShading: true
         });
     }

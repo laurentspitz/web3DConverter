@@ -80,11 +80,20 @@ function setupEventListeners() {
         downloadBlob(State.processedBuffer, filename, mimeMap[State.targetFormat] || 'application/octet-stream');
     });
 
-    // Comparison slider
+    // Comparison slider (Pointer events with capture for mobile support)
     let isDragging = false;
-    elements.sliderHandle.addEventListener('mousedown', () => isDragging = true);
-    window.addEventListener('mouseup', () => isDragging = false);
-    window.addEventListener('mousemove', (e) => {
+
+    elements.sliderHandle.addEventListener('pointerdown', (e) => {
+        isDragging = true;
+        elements.sliderHandle.setPointerCapture(e.pointerId);
+    });
+
+    elements.sliderHandle.addEventListener('pointerup', (e) => {
+        isDragging = false;
+        elements.sliderHandle.releasePointerCapture(e.pointerId);
+    });
+
+    elements.sliderHandle.addEventListener('pointermove', (e) => {
         if (!isDragging) return;
         const rect = elements.canvasHolder.getBoundingClientRect();
         let x = (e.clientX - rect.left) / rect.width;
@@ -239,112 +248,132 @@ async function runConversion() {
     UIManager.showLoader(t.loaderOptimizing);
 
     try {
-        if (State.targetFormat !== 'glb') {
-            const format = State.targetFormat;
+        const { center, scale: normalizationScale } = State.normalization;
+        const format = State.targetFormat;
+        const factor = ThreeManager.modelGroup.scale.x / (normalizationScale || 1);
+
+        // 1. Prepare export clone with user transforms baked in
+        const exportObj = ThreeManager.originalModel.clone();
+
+        // Use a definitively calculated factor (Current visual scale / Initial normalization scale)
+        const userFactor = ThreeManager.modelGroup.scale.x / (normalizationScale || 1);
+
+        // Capture exact user-facing scale relative to original units
+        exportObj.scale.copy(ThreeManager.originalModel.scale).multiplyScalar(userFactor);
+
+        // Position: Map the viewer's visual grid center (world origin) to the file's origin (0,0,0).
+        // The visual world position of the model relative to the grid is (OriginalModel.pos + PivotGroup.pos).
+        exportObj.position.copy(ThreeManager.originalModel.position)
+            .add(ThreeManager.pivotGroup.position)
+            .multiplyScalar(userFactor);
+
+        exportObj.updateMatrixWorld(true);
+
+        // 2. Setup Export Wrapper for Orientation Standards (e.g. STL Z-up)
+        let exportWrapper = new THREE.Object3D();
+        exportWrapper.add(exportObj);
+
+        // Orientation standard (Y-up to Z-up for STL)
+        if (format === 'stl' && State.inputFormat !== 'stl') {
+            exportWrapper.rotation.x = Math.PI / 2;
+        }
+        exportWrapper.updateMatrixWorld(true);
+
+        // 3. Check for Optimizations (Weld, Simplify, or Draco for GLB)
+        const needsOptimization = elements.weldCheck.checked ||
+            parseInt(elements.simplifyRange.value) > 0 ||
+            (format === 'glb' && elements.compressCheck.checked);
+
+        let optimizedObject = exportWrapper;
+        State.processedBuffer = null;
+
+        if (needsOptimization) {
             UIManager.showLoader(t.loaderOptimizing);
 
-            // 1. Clone original model with user transforms
-            const exportObj = ThreeManager.originalModel.clone();
-
-            // 2. Apply "Weld" if requested (manual implementation for Three.js geometry)
-            if (elements.weldCheck.checked) {
-                exportObj.traverse(child => {
-                    if (child.isMesh && child.geometry) {
-                        child.geometry = BufferGeometryUtils.mergeVertices(child.geometry);
-                    }
-                });
-            }
-
-            // 3. Setup Export Wrapper for Orientation (Standardization)
-            const wrapper = new THREE.Object3D();
-            wrapper.add(exportObj);
-
-            // We respect the position relative to origin that the user set (Rotation/Center/Ground)
-            // But we might need to handle specific format orientation standards if not already handled
-
-            // Standards: GLB/OBJ are Y-up. STL is usually Z-up.
-            if (format === 'stl' && State.inputFormat !== 'stl') {
-                wrapper.rotation.x = Math.PI / 2;
-            }
-            wrapper.updateMatrixWorld(true);
-
-            State.processedBuffer = null;
-            let previewResult;
-
-            if (format === 'stl') {
-                const exporter = new STLExporter();
-                const stlData = exporter.parse(wrapper, { binary: true });
-                // DataView safety: get the exact buffer slice
-                State.processedBuffer = stlData.buffer.slice(stlData.byteOffset, stlData.byteOffset + stlData.byteLength);
-
-                UIManager.showLoader(t.loaderLoading);
-                previewResult = await ModelReader.loadSTL(State.processedBuffer, true);
-
-                // Position for preview (normalized space)
-                previewResult.model.position.copy(center);
-                previewResult.model.rotation.x = -Math.PI / 2;
-            } else if (format === 'obj') {
-                const exporter = new OBJExporter();
-                const objData = exporter.parse(wrapper);
-                State.processedBuffer = new TextEncoder().encode(objData).buffer;
-                UIManager.showLoader(t.loaderLoading);
-                previewResult = await ModelReader.loadOBJ(State.processedBuffer, true);
-                previewResult.model.position.copy(center);
-            } else if (format === 'ply') {
-                const exporter = new PLYExporter();
-                const plyData = exporter.parse(wrapper, () => { }, { binary: true });
-                State.processedBuffer = plyData;
-                UIManager.showLoader(t.loaderLoading);
-                previewResult = await ModelReader.loadPLY(State.processedBuffer, true);
-                previewResult.model.position.copy(center);
-            } else if (format === 'usdz') {
-                const exporter = new USDZExporter();
-                const usdzData = await exporter.parse(wrapper);
-                State.processedBuffer = usdzData;
-                // Special case: we can't easily "preview" USDZ back in Three.js without a specific loader 
-                // (which doesn't exist officially in Three.js examples).
-                // So we'll use the GLB preview for USDZ since it's the closest representation.
-                UIManager.showLoader(t.loaderLoading);
-                previewResult = await ModelReader.loadGLB(await new Promise((res, rej) => {
-                    new GLTFExporter().parse(exportObj, res, rej, { binary: true });
-                }), 'optimized');
-                previewResult.model.position.copy(center);
-            }
-
-            previewResult.model.updateMatrixWorld(true);
-            ThreeManager.setResultModel(previewResult.model);
-
-            if (State.processedBuffer) {
-                completeResults(State.processedBuffer.byteLength, previewResult.stats);
-            }
-        } else {
-            // Target is GLB (Convert or Compress)
-            const exporter = new GLTFExporter();
-            const exportObj = ThreeManager.originalModel.clone();
-            const glbBuffer = await new Promise((resolve, reject) => {
-                exporter.parse(exportObj, resolve, reject, { binary: true });
+            // Export to temporary GLB for processing
+            const tempExporter = new GLTFExporter();
+            const tempGlb = await new Promise((resolve, reject) => {
+                tempExporter.parse(exportWrapper, resolve, reject, { binary: true });
             });
 
-            State.processedBuffer = glbBuffer;
+            // Run Optimization Pipeline
+            State.processedBuffer = await OptimizationManager.optimize(tempGlb, {
+                weld: elements.weldCheck.checked,
+                simplify: parseInt(elements.simplifyRange.value),
+                draco: format === 'glb' && elements.compressCheck.checked,
+                quantizationBits: 11
+            });
 
-            if (elements.compressCheck.checked || elements.weldCheck.checked || elements.simplifyRange.value > 0) {
-                const bits = 11;
-                UIManager.showLoader(t.loaderOptimizing);
-                State.processedBuffer = await OptimizationManager.optimize(glbBuffer, {
-                    weld: elements.weldCheck.checked,
-                    simplify: parseInt(elements.simplifyRange.value),
-                    draco: elements.compressCheck.checked,
-                    quantizationBits: bits
+            // If not just exporting GLB, we need the optimized object back for other exporters
+            if (format !== 'glb') {
+                const reloadResult = await ModelReader.loadGLB(State.processedBuffer, 'optimized');
+                optimizedObject = reloadResult.model;
+            }
+        }
+
+        // 4. Final Export
+        let previewResult;
+        UIManager.showLoader(t.loaderLoading);
+
+        // Ensure all transformations are baked into world matrices
+        optimizedObject.updateMatrixWorld(true);
+
+        if (format === 'stl') {
+            const exporter = new STLExporter();
+            const stlData = exporter.parse(optimizedObject, { binary: true });
+            State.processedBuffer = stlData.buffer.slice(stlData.byteOffset, stlData.byteOffset + stlData.byteLength);
+            previewResult = await ModelReader.loadSTL(State.processedBuffer, true);
+        } else if (format === 'obj') {
+            const exporter = new OBJExporter();
+            const objData = exporter.parse(optimizedObject);
+            State.processedBuffer = new TextEncoder().encode(objData).buffer;
+            previewResult = await ModelReader.loadOBJ(State.processedBuffer, true);
+        } else if (format === 'ply') {
+            const exporter = new PLYExporter();
+            const plyData = exporter.parse(optimizedObject, () => { }, { binary: true });
+            State.processedBuffer = plyData;
+            previewResult = await ModelReader.loadPLY(State.processedBuffer, true);
+        } else if (format === 'usdz') {
+            const exporter = new USDZExporter();
+            State.processedBuffer = await exporter.parse(optimizedObject);
+            // Preview USDZ using optimized GLB
+            previewResult = await ModelReader.loadGLB(await new Promise((res, rej) => {
+                new GLTFExporter().parse(optimizedObject, res, rej, { binary: true });
+            }), 'optimized');
+        } else {
+            // GLB
+            if (!State.processedBuffer) {
+                const exporter = new GLTFExporter();
+                State.processedBuffer = await new Promise((resolve, reject) => {
+                    exporter.parse(optimizedObject, resolve, reject, { binary: true });
                 });
             }
+            previewResult = await ModelReader.loadGLB(State.processedBuffer, 'optimized');
+        }
 
-            UIManager.showLoader(t.loaderLoading);
-            const previewResult = await ModelReader.loadGLB(State.processedBuffer, 'optimized');
-            ThreeManager.setResultModel(previewResult.model);
+        // 5. Preview Alignment (Normalized space for comparison slider)
+        // Reset scale as userFactor is already baked into the reloaded geometry/model
+        const invFactor = 1 / (userFactor || 1);
+        previewResult.model.scale.setScalar(invFactor);
 
-            if (State.processedBuffer) {
-                completeResults(State.processedBuffer.byteLength, previewResult.stats);
-            }
+        // The result model origin (0,0,0) matches the viewer's world grid center (0,0,0).
+        // Since we add it to pivotGroup, we must compensate for pivotGroup's position
+        // to stay at the viewer's world origin.
+        previewResult.model.position.copy(ThreeManager.pivotGroup.position).multiplyScalar(-1);
+
+        // Reset local rotation as the user's manual rotation is already baked into the geometry
+        previewResult.model.rotation.set(0, 0, 0);
+
+        // Reverse STL standard orientation flip for internal preview
+        if (format === 'stl' && State.inputFormat !== 'stl') {
+            previewResult.model.rotation.x = -Math.PI / 2;
+        }
+
+        previewResult.model.updateMatrixWorld(true);
+        ThreeManager.setResultModel(previewResult.model);
+
+        if (State.processedBuffer) {
+            completeResults(State.processedBuffer.byteLength, previewResult.stats);
         }
     } catch (err) {
         console.error("Conversion Error:", err);
