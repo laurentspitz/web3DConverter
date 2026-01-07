@@ -39,7 +39,8 @@ const translations = {
         supportTitle: "Soutenir le projet",
         supportText: "Si cet outil vous est utile, vous pouvez m'offrir une bière pour soutenir son développement.",
         supportBtn: "M'offrir une bière",
-        adNotice: "Publicité"
+        adNotice: "Publicité",
+        bugReport: "Signaler un bug"
     },
     en: {
         title: "STL to GLB Converter | Premium 3D Tools",
@@ -81,7 +82,8 @@ const translations = {
         supportTitle: "Support the Project",
         supportText: "If this tool helps you, feel free to buy me a beer to support its development.",
         supportBtn: "Buy me a beer",
-        adNotice: "Advertisement"
+        adNotice: "Advertisement",
+        bugReport: "Report a bug"
     },
     es: {
         title: "Convertidor STL a GLB | Herramientas 3D Premium",
@@ -122,7 +124,8 @@ const translations = {
         supportTitle: "Apoya el Proyecto",
         supportText: "Si esta herramienta te ayuda, puedes invitarme a una cerveza para apoyar su desarrollo.",
         supportBtn: "Invítame a una cerveza",
-        adNotice: "Publicidad"
+        adNotice: "Publicidad",
+        bugReport: "Reportar un error"
     },
     de: {
         title: "STL zu GLB Konverter | Premium 3D Tools",
@@ -163,7 +166,8 @@ const translations = {
         supportTitle: "Projekt unterstützen",
         supportText: "Wenn dieses Tool Ihnen hilft, können Sie mir ein Bier ausgeben, um die Entwicklung zu unterstützen.",
         supportBtn: "Ein Bier spendieren",
-        adNotice: "Anzeige"
+        adNotice: "Anzeige",
+        bugReport: "Fehler melden"
     },
     it: {
         title: "Convertitore da STL a GLB | Strumenti 3D Premium",
@@ -204,7 +208,8 @@ const translations = {
         supportTitle: "Sostieni il Progetto",
         supportText: "Se questo strumento ti è utile, offrimi una birra per sostenere il suo sviluppo.",
         supportBtn: "Offrimi una birra",
-        adNotice: "Pubblicità"
+        adNotice: "Pubblicità",
+        bugReport: "Segnala un bug"
     },
     pt: {
         title: "Conversor STL para GLB | Ferramentas 3D Premium",
@@ -245,7 +250,8 @@ const translations = {
         supportTitle: "Apoie o Projeto",
         supportText: "Se esta ferramenta for útil, pode oferecer-me uma cerveja para apoiar o seu desenvolvimento.",
         supportBtn: "Oferecer-me uma cerveja",
-        adNotice: "Publicidade"
+        adNotice: "Publicidade",
+        bugReport: "Relatar um erro"
     },
     nl: {
         title: "STL naar GLB Converter | Premium 3D Tools",
@@ -286,7 +292,8 @@ const translations = {
         supportTitle: "Steun het Project",
         supportText: "Als deze tool u helpt, kunt u mij een biertje trakteren om de ontwikkeling te steunen.",
         supportBtn: "Trakteer mij op een biertje",
-        adNotice: "Advertentie"
+        adNotice: "Advertentie",
+        bugReport: "Een bug melden"
     },
     ru: {
         title: "Конвертер STL в GLB | Премиум 3D инструменты",
@@ -327,7 +334,8 @@ const translations = {
         supportTitle: "Поддержать проект",
         supportText: "Если этот инструмент вам помог, вы можете купить мне пиво в знак поддержки.",
         supportBtn: "Купить мне пиво",
-        adNotice: "Реклама"
+        adNotice: "Реклама",
+        bugReport: "Сообщить об ошибке"
     },
     zh: {
         title: "STL 转 GLB 转换器 | 高级 3D 工具",
@@ -368,7 +376,8 @@ const translations = {
         supportTitle: "支持本项目",
         supportText: "如果这个工具对你有帮助，你可以请我喝杯啤酒来支持开发。",
         supportBtn: "请我喝杯啤酒",
-        adNotice: "广告"
+        adNotice: "广告",
+        bugReport: "报告错误"
     },
     ja: {
         title: "STL から GLB へのコンバーター | プレミアム 3D ツール",
@@ -409,7 +418,8 @@ const translations = {
         supportTitle: "プロジェクトを支援する",
         supportText: "このツールがお役に立ちましたら、開発支援のためにビールをご馳走してください。",
         supportBtn: "ビールをご馳走する",
-        adNotice: "広告"
+        adNotice: "広告",
+        bugReport: "バグを報告する"
     }
 };
 
